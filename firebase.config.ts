@@ -1,20 +1,20 @@
 // Firebase Configuration
-// IMPORTANT: Replace these values with your actual Firebase project credentials
-// Get these from Firebase Console: Project Settings > Your apps > Firebase SDK snippet
+// Firebase project: izza-event-management
 
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// TODO: Replace with your Firebase project configuration
+// Firebase configuration from Firebase Console
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY_HERE",
-    authDomain: "YOUR_AUTH_DOMAIN_HERE",
-    projectId: "YOUR_PROJECT_ID_HERE",
-    storageBucket: "YOUR_STORAGE_BUCKET_HERE",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
-    appId: "YOUR_APP_ID_HERE"
+    apiKey: "AIzaSyA6tHvuekk9WHO_I0ebRj312_S1nuD_z2o",
+    authDomain: "izza-event-management.firebaseapp.com",
+    projectId: "izza-event-management",
+    storageBucket: "izza-event-management.firebasestorage.app",
+    messagingSenderId: "401032493373",
+    appId: "1:401032493373:web:d6278f0130b68594ae2d54",
+    measurementId: "G-YJK7M4VTQG"
 };
 
 // Initialize Firebase
