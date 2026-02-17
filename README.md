@@ -4,41 +4,57 @@
 
 > A comprehensive React Native mobile application for digitalizing event planning and catering services
 
-## 📋 Overview
+## 📋 Project Summary
 
-IZZA Catering & Event Management System is a role-based mobile application designed to streamline the complete workflow of event planning and catering services. The system replaces unstructured communication methods with a centralized platform that connects users, administrators, and workers in a secure and transparent environment.
+**IZZA Catering & Event Management System** is a role-based digital platform developed to streamline and modernize the entire event planning and catering workflow. The system replaces traditional WhatsApp-based communication with a centralized application that connects users, administrators, and workers in a structured, secure, and transparent environment.
 
-## 🎯 Key Features
+The main goal of the system is to simplify event registration, approval, workforce coordination, attendance tracking, and financial management through automation and real-time updates.
 
-- **📅 Event Management** - Request, approve, and track events
-- **👥 Worker Coordination** - Efficient staff assignment and scheduling
-- **✅ Attendance Tracking** - Real-time check-in/check-out system
-- **💰 Payment Management** - Transparent financial tracking
-- **🔔 Real-time Notifications** - Instant updates via Firebase Cloud Messaging
-- **📊 Role-based Dashboards** - Customized views for Users, Admins, and Workers
+## 🎯 System Overview
 
-## 👥 User Roles
+The platform consists of three primary roles:
 
-### 1. User (Customer)
-- Register and submit event requests
-- View event approval status
-- Receive real-time notifications
-- Track event progress
+### 1️⃣ User (Customer)
+- **Register and log in**
+- **Submit event requests** by selecting a date and entering event details
+- **View approval status**
+- **Receive notifications** for approvals and updates
+- **Track event progress**
 
-### 2. Admin
-- Full CRUD operations on events
-- Approve/reject event requests
-- Assign workers to events
-- Broadcast notifications to all workers
-- View calendar-based event schedules
-- Track worker attendance and payments
+### 2️⃣ Admin (The Central Authority)
+- **Full CRUD operations**: Create, update, and delete events
+- **Approve or Reject** user-submitted events
+- **Broadcast notifications**: Send messages to all workers
+- **Assign workers** to events
+- **Calendar View**: Plan operations efficiently
+- **Monitor attendance** and worker participation
+- **Financial Tracking**: Monitor payments, pending funds, and payouts
+- **Record Keeping**: Maintain complete event and financial records
 
-### 3. Worker (Catering Staff)
-- Register personal and payment details
-- View approved events in calendar format
-- Accept assigned events
-- Mark attendance on event days
-- Track earnings and pending payments
+### 3️⃣ Worker (Catering Staff)
+- **Register personal details**: Name, address, and contact
+- **Add payment details**: GPay QR code or bank account info
+- **View approved events** and available work days
+- **Accept event assignments**
+- **Mark attendance** on event days
+- **Track earnings** and pending payments
+
+## ✨ Key Features
+- ✅ **Role-based access control**
+- ✅ **Event approval workflow**
+- ✅ **Calendar-based event management**
+- ✅ **Worker attendance tracking**
+- ✅ **Fund and payout tracking**
+- ✅ **Admin broadcast notifications**
+- ✅ **Centralized Firebase Backend**
+- ✅ **Real-time updates and transparency**
+
+## 💡 Purpose of the Project
+- **Eliminate confusion** caused by manual coordination
+- **Improve operational efficiency**
+- **Ensure transparent payment tracking**
+- **Provide better workforce management**
+- **Create a scalable foundation** for future growth
 
 ## 🛠️ Technology Stack
 

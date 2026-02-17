@@ -48,6 +48,11 @@ const LoginScreen = ({ navigation }: any) => {
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
+                    <Image
+                        source={require('../../../original-777583a22f5a93d354b63c9413579bff.webp')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
                     <Text variant="displaySmall" style={styles.title}>
                         IZZA Catering
                     </Text>
@@ -132,6 +137,11 @@ const styles = StyleSheet.create({
     header: {
         alignItems: 'center',
         marginBottom: 40,
+    },
+    logo: {
+        width: 150,
+        height: 150,
+        marginBottom: 10,
     },
     title: {
         fontWeight: 'bold',
