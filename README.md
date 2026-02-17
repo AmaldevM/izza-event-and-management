@@ -398,24 +398,38 @@ npm run lint
 npx tsc --noEmit
 ```
 
-## 📦 Building for Production
+## 🤖 Building for Android (Native)
 
-### Android APK
-```bash
-npx expo build:android
-```
+Since this version is now a prebuilt native Android app, you can build the APK directly without Expo Go:
 
-### iOS IPA (requires Mac + Apple Developer Account)
-```bash
-npx expo build:ios
-```
+### Prerequisites
+- Android Studio installed
+- JDK 17+ configured
+- Android SDK and `ANDROID_HOME` environment variable set
 
-### Using EAS Build (Recommended)
+### Build APK (Debug)
 ```bash
-npm install -g eas-cli
-eas build --platform android
-eas build --platform ios
+# Navigate to the project root
+cd izza-catering-mobile
+
+# Build the debug APK
+npx react-native run-android --mode debug
+# OR directly using Gradle:
+cd android
+./gradlew assembleDebug
 ```
+The APK will be generated at: `android/app/build/outputs/apk/debug/app-debug.apk`
+
+### Build AAB/APK (Release)
+```bash
+cd android
+./gradlew assembleRelease
+```
+The release APK will be at: `android/app/build/outputs/apk/release/app-release.apk`
+
+### Troubleshooting
+- If you face Gradle issues, run `./gradlew clean` in the `android` folder.
+- Ensure your Firebase `google-services.json` is placed in `android/app/` (Expo Prebuild handles this automatically if configured in `app.json`, but check if it's missing).
 
 ## 🤝 Contributing
 

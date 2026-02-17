@@ -1,0 +1,34 @@
+﻿./gradlew : WARNING: A restricted method in java.lang.System has been called
+At line:1 char:1
++ ./gradlew assembleDebug > build_log.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A rest...has been called:Str 
+   ing) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: java.lang.System::load has been called by 
+net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file
+:/C:/Users/amald/.gradle/wrapper/dists/gradle-8.3-all/6en3ugtfdg5xnpx44z4qbwgas/gra
+dle-8.3/lib/native-platform-0.22-milestone-24.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in 
+this module
+WARNING: Restricted methods will be blocked in a future release unless native 
+access is enabled
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Could not open settings generic class cache for settings file 'D:\Core 
+Project\izza-catering\android\settings.gradle' 
+(C:\Users\amald\.gradle\caches\8.3\scripts\bm8jqo9ywxpg8e44v1bsms0ph).
+> BUG! exception in phase 'semantic analysis' in source unit '_BuildScript_' 
+Unsupported class file major version 68
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 816ms
