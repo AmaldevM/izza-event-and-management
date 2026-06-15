@@ -1,14 +1,22 @@
+// Admin Event Management Screen - Minimalist Dark Mode with swipe-to-action gestures
+
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl, Alert, ScrollView } from 'react-native';
-import { Card, Text, Chip, FAB, Portal, Dialog, Button, TextInput, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
+import { Card, Text, Chip, FAB, Portal, Dialog, Button, TextInput, SegmentedButtons, ActivityIndicator, useTheme } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { collection, getDocs, query, orderBy, Timestamp, addDoc } from 'firebase/firestore';
 import { db } from '../../../firebase.config';
 import { useAuth } from '../../context/AuthContext';
 import { Event } from '../../types';
+import { updateEventStatus } from '../../services/eventService';
+import { useToast } from '../../components/Toast';
+import PressableScale from '../../components/PressableScale';
+import SwipeableRow from '../../components/SwipeableRow';
 
 const EventManagement = ({ navigation }: any) => {
+    const theme = useTheme();
     const { user } = useAuth();
+    const { showError, showSuccess } = useToast();
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
@@ -38,7 +46,7 @@ const EventManagement = ({ navigation }: any) => {
             setEvents(eventsList);
         } catch (error) {
             console.error('Error fetching events:', error);
-            Alert.alert('Error', 'Failed to retrieve event records');
+            showError('Failed to retrieve event records');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -50,7 +58,6 @@ const EventManagement = ({ navigation }: any) => {
     }, []);
 
     useEffect(() => {
-        // Filter events based on active tab status
         const filtered = events.filter(e => {
             if (statusFilter === 'approved') {
                 return e.status === 'approved' || e.status === 'assigned' || e.status === 'in progress';
@@ -92,9 +99,8 @@ const EventManagement = ({ navigation }: any) => {
             };
 
             await addDoc(collection(db, 'events'), newEvent);
-            Alert.alert('Success', 'Event created successfully');
+            showSuccess('Event created successfully 🎉');
             
-            // Clear inputs
             setEventTitle('');
             setEventLocation('');
             setEventGuestCount('');
@@ -107,9 +113,29 @@ const EventManagement = ({ navigation }: any) => {
             fetchEvents();
         } catch (error) {
             console.error('Error creating event:', error);
-            Alert.alert('Error', 'Failed to create event');
+            showError('Failed to create event');
         } finally {
             setCreateLoading(false);
+        }
+    };
+
+    const handleApproveEvent = async (eventId: string) => {
+        try {
+            await updateEventStatus(eventId, 'approved');
+            showSuccess('Event approved! 👍');
+            fetchEvents();
+        } catch (error) {
+            showError('Failed to approve event');
+        }
+    };
+
+    const handleRejectEvent = async (eventId: string) => {
+        try {
+            await updateEventStatus(eventId, 'rejected');
+            showSuccess('Event request rejected ❌');
+            fetchEvents();
+        } catch (error) {
+            showError('Failed to reject event');
         }
     };
 
@@ -117,64 +143,89 @@ const EventManagement = ({ navigation }: any) => {
         switch (status) {
             case 'approved':
             case 'assigned':
-                return '#2e7d32'; // Green
+            case 'in progress':
+                return '#10b981'; // Green
             case 'rejected':
-                return '#c62828'; // Red
+            case 'cancelled':
+                return '#ef4444'; // Red
             case 'completed':
-                return '#1565c0'; // Blue
+                return '#3b82f6'; // Blue
             default:
-                return '#ef6c00'; // Orange (Pending)
+                return '#eab308'; // Orange (Pending)
         }
     };
 
-    const renderEventItem = ({ item }: { item: Event }) => (
-        <Card
-            style={styles.card}
+    const renderEventCard = (item: Event) => (
+        <PressableScale
             onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
         >
-            <Card.Content>
-                <View style={styles.cardHeader}>
-                    <Text variant="titleMedium" style={styles.eventTitle}>
-                        {item.title}
+            <Card
+                style={[styles.card, { backgroundColor: theme.colors.surface }]}
+                elevation={1}
+            >
+                <Card.Content>
+                    <View style={styles.cardHeader}>
+                        <Text variant="titleMedium" style={[styles.eventTitle, { color: theme.colors.onSurface, fontWeight: 'bold' }]}>
+                            {item.title}
+                        </Text>
+                        <Chip
+                            mode="flat"
+                            style={{ backgroundColor: getStatusColor(item.status) + '20' }}
+                            textStyle={{ color: getStatusColor(item.status), fontSize: 10, fontWeight: 'bold' }}
+                        >
+                            {item.status.toUpperCase()}
+                        </Chip>
+                    </View>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
+                        📍 {item.location}  |  📅 {item.eventDate.toDate().toLocaleDateString()}
                     </Text>
-                    <Chip
-                        mode="flat"
-                        style={{ backgroundColor: getStatusColor(item.status) }}
-                        textStyle={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}
-                    >
-                        {item.status.toUpperCase()}
-                    </Chip>
-                </View>
-                <Text variant="bodySmall" style={styles.eventMeta}>
-                    📍 {item.location}  |  📅 {item.eventDate.toDate().toLocaleDateString()}
-                </Text>
-                <Text variant="bodyMedium" numberOfLines={2} style={styles.eventDescription}>
-                    {item.description}
-                </Text>
-                <View style={styles.cardFooter}>
-                    <Text variant="bodySmall" style={styles.eventUser}>
-                        Requested by: {item.userName || 'Unknown'}
+                    <Text variant="bodyMedium" numberOfLines={2} style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
+                        {item.description}
                     </Text>
-                    <Text variant="bodySmall" style={styles.workersCount}>
-                        Workers: {item.assignedWorkers?.length || 0}
-                    </Text>
-                </View>
-            </Card.Content>
-        </Card>
+                    <View style={[styles.cardFooter, { borderTopColor: theme.colors.outline }]}>
+                        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                            Client: {item.userName || 'Unknown'}
+                        </Text>
+                        <Text variant="bodySmall" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
+                            Workers: {item.assignedWorkers?.length || 0}
+                        </Text>
+                    </View>
+                </Card.Content>
+            </Card>
+        </PressableScale>
     );
+
+    const renderEventItem = ({ item }: { item: Event }) => {
+        // Only allow swipe gestures on pending events
+        if (statusFilter === 'pending') {
+            return (
+                <SwipeableRow
+                    leftActionText="Approve"
+                    leftActionColor="#10b981"
+                    onSwipeRightOpen={() => handleApproveEvent(item.id)}
+                    rightActionText="Reject"
+                    rightActionColor="#ef4444"
+                    onSwipeLeftOpen={() => handleRejectEvent(item.id)}
+                >
+                    {renderEventCard(item)}
+                </SwipeableRow>
+            );
+        }
+        return renderEventCard(item);
+    };
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#d32f2f" />
-                <Text style={styles.loadingText}>Loading event records...</Text>
+            <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>Loading event records...</Text>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.filterContainer}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.filterContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outline }]}>
                 <SegmentedButtons
                     value={statusFilter}
                     onValueChange={(val) => setStatusFilter(val as any)}
@@ -184,6 +235,12 @@ const EventManagement = ({ navigation }: any) => {
                         { value: 'completed', label: 'Completed' },
                     ]}
                     style={styles.segmentedButtons}
+                    theme={{
+                        colors: {
+                            secondaryContainer: theme.colors.primaryContainer,
+                            onSecondaryContainer: theme.colors.primary,
+                        }
+                    }}
                 />
             </View>
 
@@ -192,11 +249,11 @@ const EventManagement = ({ navigation }: any) => {
                 renderItem={renderEventItem}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />}
                 ListEmptyComponent={
-                    <Card style={styles.emptyCard}>
+                    <Card style={[styles.emptyCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                         <Card.Content>
-                            <Text style={styles.emptyText}>No events found in this category.</Text>
+                            <Text style={{ color: theme.colors.onSurfaceVariant }}>No events found in this category.</Text>
                         </Card.Content>
                     </Card>
                 }
@@ -204,73 +261,83 @@ const EventManagement = ({ navigation }: any) => {
 
             <FAB
                 icon="plus"
-                style={styles.fab}
+                style={[styles.fab, { backgroundColor: theme.colors.primary }]}
                 label="New Event"
-                color="#fff"
+                color={theme.colors.onPrimary}
                 onPress={() => setCreateVisible(true)}
             />
 
             <Portal>
-                <Dialog visible={createVisible} onDismiss={() => setCreateVisible(false)} style={styles.dialog}>
-                    <Dialog.Title>Create New Event</Dialog.Title>
+                <Dialog visible={createVisible} onDismiss={() => setCreateVisible(false)} style={[styles.dialog, { backgroundColor: theme.colors.surface }]}>
+                    <Dialog.Title style={{ color: theme.colors.onSurface }}>Create New Event</Dialog.Title>
                     <Dialog.Content>
                         <ScrollView style={styles.dialogScroll} keyboardShouldPersistTaps="handled">
                             <TextInput
                                 label="Event Title *"
                                 value={eventTitle}
                                 onChangeText={setEventTitle}
-                                mode="outlined"
-                                style={styles.input}
+                                mode="flat"
+                                style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                                activeUnderlineColor={theme.colors.primary}
                             />
                             <TextInput
                                 label="Location *"
                                 value={eventLocation}
                                 onChangeText={setEventLocation}
-                                mode="outlined"
-                                style={styles.input}
+                                mode="flat"
+                                style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                                activeUnderlineColor={theme.colors.primary}
                             />
                             <TextInput
                                 label="Guest Count *"
                                 value={eventGuestCount}
                                 onChangeText={setEventGuestCount}
                                 keyboardType="numeric"
-                                mode="outlined"
-                                style={styles.input}
+                                mode="flat"
+                                style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                                activeUnderlineColor={theme.colors.primary}
                             />
                             <TextInput
                                 label="Catering Requirements"
                                 value={eventCatering}
                                 onChangeText={setEventCatering}
-                                mode="outlined"
+                                mode="flat"
                                 placeholder="Buffet, vegetarian, etc."
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                                activeUnderlineColor={theme.colors.primary}
+                                placeholderTextColor={theme.colors.onSurfaceVariant}
                             />
                             <TextInput
                                 label="Description *"
                                 value={eventDescription}
                                 onChangeText={setEventDescription}
-                                mode="outlined"
+                                mode="flat"
                                 multiline
                                 numberOfLines={3}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                                activeUnderlineColor={theme.colors.primary}
                             />
                             <TextInput
                                 label="Additional Notes"
                                 value={eventNotes}
                                 onChangeText={setEventNotes}
-                                mode="outlined"
+                                mode="flat"
                                 multiline
                                 numberOfLines={2}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                                activeUnderlineColor={theme.colors.primary}
                             />
-                            <Button
-                                mode="outlined"
-                                icon="calendar"
-                                onPress={() => setShowDatePicker(true)}
-                                style={styles.dateBtn}
-                            >
-                                Date: {eventDate.toLocaleDateString()}
-                            </Button>
+                            <PressableScale style={{ width: '100%', marginVertical: 8 }}>
+                                <Button
+                                    mode="outlined"
+                                    icon="calendar"
+                                    onPress={() => setShowDatePicker(true)}
+                                    style={[styles.dateBtn, { borderColor: theme.colors.outline }]}
+                                    textColor={theme.colors.primary}
+                                >
+                                    Date: {eventDate.toLocaleDateString()}
+                                </Button>
+                            </PressableScale>
 
                             {showDatePicker && (
                                 <DateTimePicker
@@ -285,14 +352,14 @@ const EventManagement = ({ navigation }: any) => {
                         </ScrollView>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={() => setCreateVisible(false)} disabled={createLoading}>Cancel</Button>
+                        <Button onPress={() => setCreateVisible(false)} disabled={createLoading} textColor={theme.colors.onSurfaceVariant}>Cancel</Button>
                         <Button
                             onPress={handleCreateEvent}
                             loading={createLoading}
                             disabled={createLoading}
-                            textColor="#d32f2f"
+                            textColor={theme.colors.primary}
                         >
-                            Create Event
+                            Create
                         </Button>
                     </Dialog.Actions>
                 </Dialog>
@@ -304,13 +371,10 @@ const EventManagement = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
     },
     filterContainer: {
         padding: 12,
-        backgroundColor: '#fff',
         borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
     },
     segmentedButtons: {},
     list: {
@@ -319,9 +383,7 @@ const styles = StyleSheet.create({
     },
     card: {
         marginBottom: 12,
-        borderRadius: 8,
-        elevation: 2,
-        backgroundColor: '#fff',
+        borderRadius: 12,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -330,74 +392,49 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     eventTitle: {
-        fontWeight: 'bold',
-        color: '#111',
         flex: 1,
         marginRight: 8,
-    },
-    eventMeta: {
-        color: '#666',
-        marginBottom: 8,
-    },
-    eventDescription: {
-        color: '#444',
-        marginBottom: 8,
     },
     cardFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         borderTopWidth: 0.5,
-        borderTopColor: '#eee',
         paddingTop: 8,
         marginTop: 4,
-    },
-    eventUser: {
-        color: '#888',
-        fontSize: 11,
-    },
-    workersCount: {
-        color: '#888',
-        fontSize: 11,
-        fontWeight: 'bold',
     },
     emptyCard: {
         padding: 24,
         alignItems: 'center',
-        elevation: 1,
-        backgroundColor: '#fff',
-    },
-    emptyText: {
-        color: '#666',
+        borderRadius: 12,
     },
     fab: {
         position: 'absolute',
         margin: 16,
         right: 0,
         bottom: 0,
-        backgroundColor: '#d32f2f',
+        borderRadius: 12,
     },
     dialog: {
         maxHeight: '80%',
+        borderRadius: 16,
     },
     dialogScroll: {
         maxHeight: 400,
     },
     input: {
-        marginBottom: 12,
+        marginBottom: 8,
+        borderTopLeftRadius: 8,
+        borderTopRightRadius: 8,
     },
     dateBtn: {
-        marginVertical: 8,
+        width: '100%',
+        borderRadius: 8,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
-    },
-    loadingText: {
-        marginTop: 12,
-        color: '#666',
     },
 });
 

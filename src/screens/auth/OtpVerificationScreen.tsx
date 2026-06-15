@@ -1,4 +1,4 @@
-// OTP Verification Screen - 6-digit animated OTP input with auto-advance and countdown timer
+// OTP Verification Screen - Minimalist Dark Mode with tactile micro-interactions
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
@@ -11,12 +11,12 @@ import {
     NativeSyntheticEvent,
     TextInputKeyPressEventData,
 } from 'react-native';
-import { Text, Button } from 'react-native-paper';
-import { Icon } from 'react-native-paper';
+import { Text, Button, useTheme, Icon } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
 import { verifyOtp, sendOtpEmail } from '../../services/otpService';
 import { RegisterFormData } from '../../types';
+import PressableScale from '../../components/PressableScale';
 
 const OTP_LENGTH = 6;
 const RESEND_COUNTDOWN = 30;
@@ -27,6 +27,7 @@ interface OtpVerificationParams {
 }
 
 const OtpVerificationScreen = ({ route, navigation }: any) => {
+    const theme = useTheme();
     const { email, formData } = route.params as OtpVerificationParams;
     const { register } = useAuth();
     const { showError, showSuccess, showInfo } = useToast();
@@ -74,7 +75,6 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
 
     // Entrance animation on mount
     useEffect(() => {
-        // Header fade + slide
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
@@ -88,7 +88,6 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
             }),
         ]).start();
 
-        // Staggered box entrance
         const boxAnims = boxAnimations.map((anim, index) =>
             Animated.timing(anim, {
                 toValue: 1,
@@ -99,10 +98,8 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
         );
         Animated.stagger(80, boxAnims).start();
 
-        // Start resend countdown
         startCountdown();
 
-        // Focus first input
         setTimeout(() => {
             inputRefs.current[0]?.focus();
         }, 600);
@@ -131,7 +128,6 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
                 showSuccess('Account created successfully! 🎉');
             } catch (err: any) {
                 showError(err.message || 'Verification failed. Please try again.');
-                // Clear OTP on error and refocus first input
                 setOtp(Array(OTP_LENGTH).fill(''));
                 setTimeout(() => {
                     inputRefs.current[0]?.focus();
@@ -145,7 +141,6 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
 
     // Handle digit input
     const handleChange = (text: string, index: number) => {
-        // Only accept single digit
         const digit = text.replace(/[^0-9]/g, '').slice(-1);
 
         const newOtp = [...otp];
@@ -153,12 +148,10 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
         setOtp(newOtp);
 
         if (digit) {
-            // Move to next input
             if (index < OTP_LENGTH - 1) {
                 inputRefs.current[index + 1]?.focus();
             }
 
-            // Auto-submit when all digits filled
             const fullCode = newOtp.join('');
             if (fullCode.length === OTP_LENGTH && newOtp.every((d) => d !== '')) {
                 handleVerify(fullCode);
@@ -173,13 +166,11 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
     ) => {
         if (e.nativeEvent.key === 'Backspace') {
             if (otp[index] === '' && index > 0) {
-                // Current box empty — clear previous and move back
                 const newOtp = [...otp];
                 newOtp[index - 1] = '';
                 setOtp(newOtp);
                 inputRefs.current[index - 1]?.focus();
             } else {
-                // Clear current box
                 const newOtp = [...otp];
                 newOtp[index] = '';
                 setOtp(newOtp);
@@ -196,7 +187,6 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
             await sendOtpEmail(email);
             showInfo('A new verification code has been sent to your email.');
             startCountdown();
-            // Clear current OTP and refocus
             setOtp(Array(OTP_LENGTH).fill(''));
             setTimeout(() => {
                 inputRefs.current[0]?.focus();
@@ -208,7 +198,6 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
         }
     };
 
-    // Manual verify button press
     const handleVerifyPress = () => {
         const code = otp.join('');
         if (code.length !== OTP_LENGTH) {
@@ -220,7 +209,7 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
 
     return (
         <KeyboardAvoidingView
-            style={styles.container}
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <View style={styles.content}>
@@ -234,17 +223,17 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
                         },
                     ]}
                 >
-                    <View style={styles.iconContainer}>
-                        <Icon source="email-outline" size={48} color="#6200ee" />
+                    <View style={[styles.iconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
+                        <Icon source="email-outline" size={42} color={theme.colors.primary} />
                     </View>
 
-                    <Text variant="headlineMedium" style={styles.title}>
+                    <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.primary }]}>
                         Verify Your Email
                     </Text>
 
-                    <Text variant="bodyMedium" style={styles.subtitle}>
+                    <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
                         We sent a code to{' '}
-                        <Text style={styles.emailText}>{getMaskedEmail(email)}</Text>
+                        <Text style={[styles.emailText, { color: theme.colors.onSurface }]}>{getMaskedEmail(email)}</Text>
                     </Text>
                 </Animated.View>
 
@@ -271,8 +260,13 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
                                 }}
                                 style={[
                                     styles.otpBox,
-                                    focusedIndex === index && styles.otpBoxFocused,
-                                    digit !== '' && styles.otpBoxFilled,
+                                    {
+                                        backgroundColor: theme.colors.surface,
+                                        color: theme.colors.onSurface,
+                                        borderColor: theme.colors.outline,
+                                    },
+                                    focusedIndex === index && { borderColor: theme.colors.primary },
+                                    digit !== '' && { borderColor: theme.colors.primaryContainer },
                                 ]}
                                 value={digit}
                                 onChangeText={(text) => handleChange(text, index)}
@@ -283,6 +277,7 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
                                 maxLength={1}
                                 selectTextOnFocus
                                 editable={!loading}
+                                placeholderTextColor={theme.colors.onSurfaceVariant}
                             />
                         </Animated.View>
                     ))}
@@ -293,50 +288,57 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
                     style={[styles.resendContainer, { opacity: fadeAnim }]}
                 >
                     {countdown > 0 ? (
-                        <Text variant="bodyMedium" style={styles.timerText}>
+                        <Text variant="bodyMedium" style={[styles.timerText, { color: theme.colors.onSurfaceVariant }]}>
                             Resend code in{' '}
-                            <Text style={styles.timerCountdown}>
+                            <Text style={[styles.timerCountdown, { color: theme.colors.primary }]}>
                                 {formatCountdown(countdown)}
                             </Text>
                         </Text>
                     ) : (
-                        <Button
-                            mode="text"
-                            onPress={handleResend}
-                            loading={resendLoading}
-                            disabled={resendLoading}
-                            textColor="#6200ee"
-                        >
-                            Resend Code
-                        </Button>
+                        <PressableScale>
+                            <Button
+                                mode="text"
+                                onPress={handleResend}
+                                loading={resendLoading}
+                                disabled={resendLoading}
+                                textColor={theme.colors.primary}
+                            >
+                                Resend Code
+                            </Button>
+                        </PressableScale>
                     )}
                 </Animated.View>
 
                 {/* Verify Button */}
                 <Animated.View style={{ opacity: fadeAnim }}>
-                    <Button
-                        mode="contained"
-                        onPress={handleVerifyPress}
-                        loading={loading}
-                        disabled={loading || otp.some((d) => d === '')}
-                        style={styles.verifyButton}
-                        buttonColor="#6200ee"
-                        textColor="#fff"
-                    >
-                        Verify
-                    </Button>
+                    <PressableScale style={styles.buttonWrapper}>
+                        <Button
+                            mode="contained"
+                            onPress={handleVerifyPress}
+                            loading={loading}
+                            disabled={loading || otp.some((d) => d === '')}
+                            style={styles.verifyButton}
+                            buttonColor={theme.colors.primary}
+                            textColor={theme.colors.onPrimary}
+                        >
+                            Verify OTP
+                        </Button>
+                    </PressableScale>
                 </Animated.View>
 
                 {/* Back to Register */}
                 <Animated.View style={{ opacity: fadeAnim }}>
-                    <Button
-                        mode="text"
-                        onPress={() => navigation.goBack()}
-                        style={styles.backButton}
-                        disabled={loading}
-                    >
-                        ← Back to Register
-                    </Button>
+                    <PressableScale>
+                        <Button
+                            mode="text"
+                            onPress={() => navigation.goBack()}
+                            style={styles.backButton}
+                            disabled={loading}
+                            textColor={theme.colors.onSurfaceVariant}
+                        >
+                            ← Back to Register
+                        </Button>
+                    </PressableScale>
                 </Animated.View>
             </View>
         </KeyboardAvoidingView>
@@ -346,79 +348,66 @@ const OtpVerificationScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     content: {
         flex: 1,
         justifyContent: 'center',
-        padding: 20,
+        padding: 24,
     },
     header: {
         alignItems: 'center',
-        marginBottom: 36,
+        marginBottom: 40,
     },
     iconContainer: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#ede7f6',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 20,
     },
     title: {
         fontWeight: 'bold',
-        color: '#6200ee',
         marginBottom: 8,
     },
     subtitle: {
-        color: '#666',
         textAlign: 'center',
         lineHeight: 22,
     },
     emailText: {
-        fontWeight: '600',
-        color: '#333',
+        fontWeight: 'bold',
     },
     otpContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 10,
-        marginBottom: 28,
+        gap: 8,
+        marginBottom: 32,
     },
     otpBox: {
-        width: 48,
-        height: 56,
-        borderWidth: 2,
-        borderColor: '#e0e0e0',
+        width: 46,
+        height: 54,
+        borderWidth: 1.5,
         borderRadius: 12,
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         textAlign: 'center',
-        backgroundColor: '#fff',
-        color: '#333',
-    },
-    otpBoxFocused: {
-        borderColor: '#6200ee',
-    },
-    otpBoxFilled: {
-        borderColor: '#b39ddb',
-        backgroundColor: '#faf8ff',
     },
     resendContainer: {
         alignItems: 'center',
         marginBottom: 24,
     },
     timerText: {
-        color: '#666',
+        fontSize: 14,
     },
     timerCountdown: {
-        fontWeight: '600',
-        color: '#6200ee',
+        fontWeight: 'bold',
+    },
+    buttonWrapper: {
+        width: '100%',
     },
     verifyButton: {
-        paddingVertical: 6,
         borderRadius: 8,
+        paddingVertical: 6,
     },
     backButton: {
         marginTop: 16,

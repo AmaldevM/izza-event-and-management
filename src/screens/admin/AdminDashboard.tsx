@@ -1,13 +1,17 @@
+// Admin Dashboard Screen - Minimalist Dark Mode with tactile micro-interactions
+
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
-import { Card, Text, Button, Avatar, Surface, Portal, Dialog, TextInput, ActivityIndicator } from 'react-native-paper';
+import { Card, Text, Button, Avatar, Surface, Portal, Dialog, TextInput, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { collection, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../../../firebase.config';
 import { broadcastToWorkers } from '../../services/notificationService';
 import { Event } from '../../types';
+import PressableScale from '../../components/PressableScale';
 
 const AdminDashboard = ({ navigation }: any) => {
+    const theme = useTheme();
     const { user, logout } = useAuth();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -106,8 +110,6 @@ const AdminDashboard = ({ navigation }: any) => {
         }
     };
 
-
-
     useEffect(() => {
         fetchDashboardData();
     }, []);
@@ -139,93 +141,98 @@ const AdminDashboard = ({ navigation }: any) => {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#d32f2f" />
-                <Text style={styles.loadingText}>Loading statistics...</Text>
+            <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>Loading statistics...</Text>
             </View>
         );
     }
 
     return (
         <ScrollView
-            style={styles.container}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />}
         >
             {/* Header section */}
-            <Surface style={styles.header}>
+            <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={1}>
                 <View style={styles.headerContent}>
-                    <Avatar.Icon size={50} icon="shield-account" style={styles.avatar} />
+                    <Avatar.Icon size={52} icon="shield-account" style={{ backgroundColor: theme.colors.primaryContainer }} color={theme.colors.primary} />
                     <View style={styles.userInfo}>
-                        <Text variant="titleLarge" style={styles.userName}>
+                        <Text variant="titleLarge" style={[styles.userName, { color: theme.colors.onSurface }]}>
                             {user?.name}
                         </Text>
-                        <Text variant="bodySmall" style={styles.userRole}>
+                        <Text variant="bodySmall" style={[styles.userRole, { color: theme.colors.primary }]}>
                             SYSTEM ADMINISTRATOR
                         </Text>
                     </View>
-                    <Button mode="outlined" textColor="#fff" onPress={logout} style={styles.logoutButton}>
-                        Logout
+                    <Button mode="outlined" onPress={logout} style={[styles.logoutButton, { borderColor: theme.colors.outline }]} textColor={theme.colors.primary}>
+                        Sign Out
                     </Button>
                 </View>
             </Surface>
 
             <View style={styles.content}>
                 {/* Stats Grid */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>System Summary</Text>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>System Summary</Text>
+                
                 <View style={styles.grid}>
-                    <Card style={[styles.statCard, { borderLeftWidth: 4, borderLeftColor: '#1976d2' }]}>
+                    <Card style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                         <Card.Content style={styles.statContent}>
-                            <Text variant="displaySmall" style={[styles.statNumber, { color: '#1976d2' }]}>
+                            <View style={[styles.accentLine, { backgroundColor: '#3b82f6' }]} />
+                            <Text variant="headlineMedium" style={[styles.statNumber, { color: '#3b82f6' }]}>
                                 {stats.totalUsers}
                             </Text>
-                            <Text variant="bodySmall" style={styles.statLabel}>Customers</Text>
+                            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Customers</Text>
                         </Card.Content>
                     </Card>
 
-                    <Card style={[styles.statCard, { borderLeftWidth: 4, borderLeftColor: '#388e3c' }]}>
+                    <Card style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                         <Card.Content style={styles.statContent}>
-                            <Text variant="displaySmall" style={[styles.statNumber, { color: '#388e3c' }]}>
+                            <View style={[styles.accentLine, { backgroundColor: '#10b981' }]} />
+                            <Text variant="headlineMedium" style={[styles.statNumber, { color: '#10b981' }]}>
                                 {stats.totalWorkers}
                             </Text>
-                            <Text variant="bodySmall" style={styles.statLabel}>Workers</Text>
+                            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Workers</Text>
                         </Card.Content>
                     </Card>
                 </View>
 
                 <View style={styles.grid}>
-                    <Card style={[styles.statCard, { borderLeftWidth: 4, borderLeftColor: '#ef6c00' }]}>
+                    <Card style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                         <Card.Content style={styles.statContent}>
-                            <Text variant="displaySmall" style={[styles.statNumber, { color: '#ef6c00' }]}>
+                            <View style={[styles.accentLine, { backgroundColor: '#eab308' }]} />
+                            <Text variant="headlineMedium" style={[styles.statNumber, { color: '#eab308' }]}>
                                 {stats.pendingApprovals}
                             </Text>
-                            <Text variant="bodySmall" style={styles.statLabel}>Pending Approval</Text>
+                            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Pending Approval</Text>
                         </Card.Content>
                     </Card>
 
-                    <Card style={[styles.statCard, { borderLeftWidth: 4, borderLeftColor: '#7b1fa2' }]}>
+                    <Card style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                         <Card.Content style={styles.statContent}>
-                            <Text variant="displaySmall" style={[styles.statNumber, { color: '#7b1fa2' }]}>
+                            <View style={[styles.accentLine, { backgroundColor: '#a855f7' }]} />
+                            <Text variant="headlineMedium" style={[styles.statNumber, { color: '#a855f7' }]}>
                                 {stats.upcomingEvents}
                             </Text>
-                            <Text variant="bodySmall" style={styles.statLabel}>Upcoming Events</Text>
+                            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Upcoming Events</Text>
                         </Card.Content>
                     </Card>
                 </View>
 
                 {/* Financial Summary */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>Financials</Text>
-                <Card style={styles.financeCard}>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Financials</Text>
+                <Card style={[styles.financeCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                     <Card.Content style={styles.financeGrid}>
                         <View style={styles.financeItem}>
-                            <Text variant="bodyMedium" style={styles.financeLabel}>Total Paid Payouts</Text>
-                            <Text variant="headlineSmall" style={{ color: '#2e7d32', fontWeight: 'bold' }}>
+                            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 4 }}>Total Paid Payouts</Text>
+                            <Text variant="titleLarge" style={{ color: '#10b981', fontWeight: 'bold' }}>
                                 ₹{stats.totalPaid}
                             </Text>
                         </View>
-                        <View style={styles.financeDivider} />
+                        <View style={[styles.financeDivider, { backgroundColor: theme.colors.outline }]} />
                         <View style={styles.financeItem}>
-                            <Text variant="bodyMedium" style={styles.financeLabel}>Pending Payouts</Text>
-                            <Text variant="headlineSmall" style={{ color: '#c62828', fontWeight: 'bold' }}>
+                            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 4 }}>Pending Payouts</Text>
+                            <Text variant="titleLarge" style={{ color: '#ef4444', fontWeight: 'bold' }}>
                                 ₹{stats.totalPendingPayouts}
                             </Text>
                         </View>
@@ -233,92 +240,104 @@ const AdminDashboard = ({ navigation }: any) => {
                 </Card>
 
                 {/* Quick Actions */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>Quick Management</Text>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Quick Management</Text>
                 <View style={styles.actionsRow}>
-                    <Button
-                        mode="contained"
-                        icon="bullhorn"
-                        buttonColor="#d32f2f"
-                        onPress={() => setBroadcastVisible(true)}
-                        style={styles.actionButton}
-                    >
-                        Send Broadcast
-                    </Button>
-                    <Button
-                        mode="contained"
-                        icon="calendar"
-                        buttonColor="#1976d2"
-                        onPress={() => navigation.navigate('Events')}
-                        style={styles.actionButton}
-                    >
-                        Event Manager
-                    </Button>
+                    <PressableScale style={styles.actionPressable} onPress={() => setBroadcastVisible(true)}>
+                        <Button
+                            mode="contained"
+                            icon="bullhorn-outline"
+                            buttonColor={theme.colors.primary}
+                            textColor={theme.colors.onPrimary}
+                            style={styles.actionButton}
+                            onPress={() => setBroadcastVisible(true)}
+                        >
+                            Broadcast
+                        </Button>
+                    </PressableScale>
+                    
+                    <PressableScale style={styles.actionPressable} onPress={() => navigation.navigate('Events')}>
+                        <Button
+                            mode="outlined"
+                            icon="calendar-text-outline"
+                            textColor={theme.colors.primary}
+                            style={[styles.actionButton, { borderColor: theme.colors.outline }]}
+                            onPress={() => navigation.navigate('Events')}
+                        >
+                            Events
+                        </Button>
+                    </PressableScale>
                 </View>
 
                 {/* Pending Requests List */}
                 <View style={styles.headerRow}>
-                    <Text variant="titleMedium" style={styles.sectionTitle}>Pending Approvals</Text>
-                    <Button mode="text" onPress={() => navigation.navigate('Events')}>View All</Button>
+                    <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Pending Approvals</Text>
+                    <Button mode="text" onPress={() => navigation.navigate('Events')} textColor={theme.colors.primary}>View All</Button>
                 </View>
 
                 {pendingEvents.length === 0 ? (
-                    <Card style={styles.emptyCard}>
+                    <Card style={[styles.emptyCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                         <Card.Content>
-                            <Text style={styles.emptyText}>No pending event requests to approve.</Text>
+                            <Text style={{ color: theme.colors.onSurfaceVariant }}>No pending event requests to approve.</Text>
                         </Card.Content>
                     </Card>
                 ) : (
                     pendingEvents.slice(0, 3).map(event => (
-                        <Card
+                        <PressableScale
                             key={event.id}
-                            style={styles.eventCard}
                             onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
                         >
-                            <Card.Content>
-                                <View style={styles.eventHeader}>
-                                    <Text variant="titleMedium" style={styles.eventTitle}>{event.title}</Text>
-                                    <Text variant="bodySmall" style={styles.eventUser}>By: {event.userName}</Text>
-                                </View>
-                                <Text variant="bodySmall" style={styles.eventDetails}>
-                                    📅 {event.eventDate.toDate().toLocaleDateString()}  |  📍 {event.location}
-                                </Text>
-                            </Card.Content>
-                        </Card>
+                            <Card
+                                style={[styles.eventCard, { backgroundColor: theme.colors.surface }]}
+                                elevation={1}
+                            >
+                                <Card.Content>
+                                    <View style={styles.eventHeader}>
+                                        <Text variant="titleMedium" style={[styles.eventTitle, { color: theme.colors.onSurface }]}>{event.title}</Text>
+                                        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>By: {event.userName}</Text>
+                                    </View>
+                                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
+                                        📅 {event.eventDate.toDate().toLocaleDateString()}  |  📍 {event.location}
+                                    </Text>
+                                </Card.Content>
+                            </Card>
+                        </PressableScale>
                     ))
                 )}
             </View>
 
             {/* Broadcast announcement portal */}
             <Portal>
-                <Dialog visible={broadcastVisible} onDismiss={() => setBroadcastVisible(false)}>
-                    <Dialog.Title>Send Workers Broadcast</Dialog.Title>
+                <Dialog visible={broadcastVisible} onDismiss={() => setBroadcastVisible(false)} style={{ backgroundColor: theme.colors.surface }}>
+                    <Dialog.Title style={{ color: theme.colors.onSurface }}>Send Workers Broadcast</Dialog.Title>
                     <Dialog.Content>
                         <TextInput
                             label="Announcement Title"
                             value={broadcastTitle}
                             onChangeText={setBroadcastTitle}
-                            mode="outlined"
-                            style={styles.broadcastInput}
+                            mode="flat"
+                            style={[styles.broadcastInput, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
                         <TextInput
                             label="Message Content"
                             value={broadcastMessage}
                             onChangeText={setBroadcastMessage}
-                            mode="outlined"
+                            mode="flat"
                             multiline
                             numberOfLines={4}
-                            style={styles.broadcastInput}
+                            style={[styles.broadcastInput, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={() => setBroadcastVisible(false)} disabled={broadcastLoading}>Cancel</Button>
+                        <Button onPress={() => setBroadcastVisible(false)} disabled={broadcastLoading} textColor={theme.colors.onSurfaceVariant}>Cancel</Button>
                         <Button
                             onPress={handleSendBroadcast}
                             loading={broadcastLoading}
                             disabled={broadcastLoading}
-                            textColor="#d32f2f"
+                            textColor={theme.colors.primary}
                         >
-                            Send Broadcast
+                            Send
                         </Button>
                     </Dialog.Actions>
                 </Dialog>
@@ -330,109 +349,99 @@ const AdminDashboard = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
     },
     loadingText: {
         marginTop: 12,
-        color: '#666',
     },
     header: {
-        padding: 16,
-        backgroundColor: '#d32f2f',
-        elevation: 4,
+        padding: 24,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
     },
     headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    avatar: {
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     userInfo: {
         marginLeft: 16,
         flex: 1,
     },
     userName: {
-        color: '#fff',
         fontWeight: 'bold',
     },
     userRole: {
-        color: '#ffcdd2',
         fontWeight: 'bold',
+        fontSize: 11,
         letterSpacing: 1,
     },
     logoutButton: {
-        borderColor: '#fff',
+        borderRadius: 8,
     },
     content: {
-        padding: 16,
+        padding: 24,
     },
     sectionTitle: {
-        fontWeight: 'bold',
+        fontWeight: '700',
         marginVertical: 12,
-        color: '#333',
     },
     grid: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 12,
+        gap: 8,
+        marginBottom: 8,
     },
     statCard: {
         flex: 1,
-        marginHorizontal: 4,
-        borderRadius: 8,
-        elevation: 2,
-        backgroundColor: '#fff',
+        borderRadius: 12,
+        overflow: 'hidden',
     },
     statContent: {
-        paddingVertical: 8,
+        paddingVertical: 16,
         alignItems: 'center',
+        position: 'relative',
+    },
+    accentLine: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 3,
     },
     statNumber: {
         fontWeight: 'bold',
     },
-    statLabel: {
-        color: '#666',
-        marginTop: 4,
-    },
     financeCard: {
-        borderRadius: 8,
-        elevation: 2,
+        borderRadius: 12,
         marginBottom: 12,
-        backgroundColor: '#fff',
     },
     financeGrid: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
+        paddingVertical: 4,
     },
     financeItem: {
         alignItems: 'center',
         flex: 1,
     },
-    financeLabel: {
-        color: '#666',
-        marginBottom: 4,
-    },
     financeDivider: {
         width: 1,
         height: 40,
-        backgroundColor: '#e0e0e0',
     },
     actionsRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        gap: 12,
         marginBottom: 16,
     },
-    actionButton: {
+    actionPressable: {
         flex: 1,
-        marginHorizontal: 4,
+    },
+    actionButton: {
+        width: '100%',
         borderRadius: 8,
     },
     headerRow: {
@@ -442,20 +451,13 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     emptyCard: {
-        padding: 16,
-        borderRadius: 8,
-        elevation: 1,
-        backgroundColor: '#fff',
+        borderRadius: 12,
         alignItems: 'center',
-    },
-    emptyText: {
-        color: '#777',
+        paddingVertical: 20,
     },
     eventCard: {
         marginBottom: 12,
-        borderRadius: 8,
-        elevation: 2,
-        backgroundColor: '#fff',
+        borderRadius: 12,
     },
     eventHeader: {
         flexDirection: 'row',
@@ -465,13 +467,6 @@ const styles = StyleSheet.create({
     },
     eventTitle: {
         fontWeight: 'bold',
-        color: '#111',
-    },
-    eventUser: {
-        color: '#666',
-    },
-    eventDetails: {
-        color: '#666',
     },
     broadcastInput: {
         marginBottom: 12,

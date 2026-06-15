@@ -1,6 +1,8 @@
+// Worker Dashboard Screen - Minimalist Dark Mode with tactile micro-interactions
+
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Alert, Image } from 'react-native';
-import { Card, Text, Button, Avatar, Surface, TextInput, ActivityIndicator, Divider } from 'react-native-paper';
+import { Card, Text, Button, Avatar, Surface, TextInput, ActivityIndicator, Divider, useTheme } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
@@ -10,8 +12,10 @@ import { getWorkerAssignments } from '../../services/assignmentService';
 import { getWorkerAttendance } from '../../services/attendanceService';
 import { getWorkerPayments } from '../../services/paymentService';
 import { EventAssignment, User } from '../../types';
+import PressableScale from '../../components/PressableScale';
 
 const WorkerDashboard = ({ navigation }: any) => {
+    const theme = useTheme();
     const { user, logout } = useAuth();
     const [dbUser, setDbUser] = useState<User | null>(null);
     
@@ -42,13 +46,11 @@ const WorkerDashboard = ({ navigation }: any) => {
     const loadWorkerData = async () => {
         if (!user) return;
         try {
-            // 1. Fetch latest user doc
             const userDoc = await getDoc(doc(db, 'users', user.id));
             if (userDoc.exists()) {
                 const userData = { id: userDoc.id, ...userDoc.data() } as User;
                 setDbUser(userData);
                 
-                // Initialize form states
                 setName(userData.name || '');
                 setPhone(userData.phone || '');
                 setAddress(userData.workerDetails?.address || '');
@@ -59,11 +61,9 @@ const WorkerDashboard = ({ navigation }: any) => {
                 setUpiId(userData.workerDetails?.upiId || '');
             }
 
-            // 2. Fetch Assignments
             const allAssignments = await getWorkerAssignments(user.id);
             const now = Timestamp.now().toDate();
             
-            // Filter upcoming accepted ones
             const upcoming = allAssignments.filter(a => 
                 a.status === 'accepted' && 
                 a.eventDate.toDate() >= now
@@ -71,11 +71,9 @@ const WorkerDashboard = ({ navigation }: any) => {
             upcoming.sort((a, b) => a.eventDate.seconds - b.eventDate.seconds);
             setUpcomingAssignments(upcoming);
 
-            // 3. Fetch Attendance
             const attendanceList = await getWorkerAttendance(user.id);
             setEventsWorked(attendanceList.filter(a => a.status === 'present').length);
 
-            // 4. Fetch Payments
             const paymentsList = await getWorkerPayments(user.id);
             let earned = 0;
             let pending = 0;
@@ -142,7 +140,6 @@ const WorkerDashboard = ({ navigation }: any) => {
         if (!user) return;
         
         try {
-            // Request gallery permissions
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert('Permission Denied', 'We need access to your photo library to select the QR code image.');
@@ -162,18 +159,14 @@ const WorkerDashboard = ({ navigation }: any) => {
             setQrUploading(true);
             const selectedUri = result.assets[0].uri;
 
-            // Fetch local URI and convert to Blob
             const response = await fetch(selectedUri);
             const blob = await response.blob();
 
-            // Upload to Firebase Storage
             const storageRef = ref(storage, `qrcodes/${user.id}.jpg`);
             await uploadBytes(storageRef, blob);
 
-            // Get download URL
             const downloadUrl = await getDownloadURL(storageRef);
 
-            // Update Firestore
             const updatedDetails = {
                 bankAccount,
                 ifscCode,
@@ -200,152 +193,175 @@ const WorkerDashboard = ({ navigation }: any) => {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#388e3c" />
-                <Text style={styles.loadingText}>Loading worker profile...</Text>
+            <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>Loading worker profile...</Text>
             </View>
         );
     }
 
     return (
         <ScrollView
-            style={styles.container}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />}
             keyboardShouldPersistTaps="handled"
         >
             {/* Header */}
-            <Surface style={styles.header}>
+            <Surface style={[styles.header, { backgroundColor: theme.colors.surface }]} elevation={1}>
                 <View style={styles.headerContent}>
-                    <Avatar.Icon size={50} icon="chef-hat" style={styles.avatar} />
+                    <Avatar.Icon size={52} icon="chef-hat" style={{ backgroundColor: theme.colors.primaryContainer }} color={theme.colors.primary} />
                     <View style={styles.userInfo}>
-                        <Text variant="titleLarge" style={styles.userName}>{dbUser?.name}</Text>
-                        <Text variant="bodySmall" style={styles.userRole}>CATERING STAFF MEMBER</Text>
+                        <Text variant="titleLarge" style={[styles.userName, { color: theme.colors.onSurface }]}>{dbUser?.name}</Text>
+                        <Text variant="bodySmall" style={[styles.userRole, { color: theme.colors.primary }]}>CATERING STAFF MEMBER</Text>
                     </View>
-                    <Button mode="outlined" textColor="#fff" onPress={logout} style={styles.logoutBtn}>
-                        Logout
+                    <Button mode="outlined" onPress={logout} style={[styles.logoutBtn, { borderColor: theme.colors.outline }]} textColor={theme.colors.primary}>
+                        Sign Out
                     </Button>
                 </View>
             </Surface>
 
             <View style={styles.content}>
                 {/* Stats */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>My Activity Summary</Text>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>My Activity Summary</Text>
+                
                 <View style={styles.statsRow}>
-                    <Card style={[styles.statCard, { backgroundColor: '#e8f5e9' }]} onPress={() => navigation.navigate('AttendanceHistory')}>
-                        <Card.Content style={styles.statContent}>
-                            <Text variant="headlineMedium" style={{ color: '#2e7d32', fontWeight: 'bold' }}>
-                                {eventsWorked}
-                            </Text>
-                            <Text variant="bodySmall" style={styles.statLabel}>Events Worked</Text>
-                        </Card.Content>
-                    </Card>
+                    <PressableScale style={styles.statPressable} onPress={() => navigation.navigate('AttendanceHistory')}>
+                        <Card style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                            <Card.Content style={styles.statContent}>
+                                <View style={[styles.accentLine, { backgroundColor: '#10b981' }]} />
+                                <Text variant="headlineMedium" style={{ color: '#10b981', fontWeight: 'bold' }}>
+                                    {eventsWorked}
+                                </Text>
+                                <Text variant="bodySmall" style={styles.statLabel}>Events Worked</Text>
+                            </Card.Content>
+                        </Card>
+                    </PressableScale>
 
-                    <Card style={[styles.statCard, { backgroundColor: '#e3f2fd' }]} onPress={() => navigation.navigate('Earnings')}>
-                        <Card.Content style={styles.statContent}>
-                            <Text variant="headlineMedium" style={{ color: '#1565c0', fontWeight: 'bold' }}>
-                                ₹{totalEarned}
-                            </Text>
-                            <Text variant="bodySmall" style={styles.statLabel}>Earnings Received</Text>
-                        </Card.Content>
-                    </Card>
+                    <PressableScale style={styles.statPressable} onPress={() => navigation.navigate('Earnings')}>
+                        <Card style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                            <Card.Content style={styles.statContent}>
+                                <View style={[styles.accentLine, { backgroundColor: '#3b82f6' }]} />
+                                <Text variant="headlineMedium" style={{ color: '#3b82f6', fontWeight: 'bold' }}>
+                                    ₹{totalEarned}
+                                </Text>
+                                <Text variant="bodySmall" style={styles.statLabel}>Total Earned</Text>
+                            </Card.Content>
+                        </Card>
+                    </PressableScale>
 
-                    <Card style={[styles.statCard, { backgroundColor: '#ffe0b2' }]} onPress={() => navigation.navigate('Earnings')}>
-                        <Card.Content style={styles.statContent}>
-                            <Text variant="headlineMedium" style={{ color: '#e65100', fontWeight: 'bold' }}>
-                                ₹{pendingPayouts}
-                            </Text>
-                            <Text variant="bodySmall" style={styles.statLabel}>Pending Payouts</Text>
-                        </Card.Content>
-                    </Card>
+                    <PressableScale style={styles.statPressable} onPress={() => navigation.navigate('Earnings')}>
+                        <Card style={[styles.statCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                            <Card.Content style={styles.statContent}>
+                                <View style={[styles.accentLine, { backgroundColor: '#eab308' }]} />
+                                <Text variant="headlineMedium" style={{ color: '#eab308', fontWeight: 'bold' }}>
+                                    ₹{pendingPayouts}
+                                </Text>
+                                <Text variant="bodySmall" style={styles.statLabel}>Pending</Text>
+                            </Card.Content>
+                        </Card>
+                    </PressableScale>
                 </View>
 
                 {/* Upcoming Assignments */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>Upcoming Event Schedule</Text>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Upcoming Event Schedule</Text>
+                
                 {upcomingAssignments.length === 0 ? (
-                    <Card style={styles.emptyCard}>
+                    <Card style={[styles.emptyCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
                         <Card.Content>
                             <Text style={styles.emptyText}>No upcoming assigned events. Check "Available" events to accept work.</Text>
                         </Card.Content>
                     </Card>
                 ) : (
                     upcomingAssignments.map(item => (
-                        <Card
+                        <PressableScale
                             key={item.id}
-                            style={styles.eventCard}
                             onPress={() => navigation.navigate('EventDetails', { eventId: item.eventId })}
                         >
-                            <Card.Content>
-                                <Text variant="titleMedium" style={styles.eventTitle}>{item.eventTitle}</Text>
-                                <Text variant="bodySmall" style={styles.eventMeta}>
-                                    📅 {item.eventDate.toDate().toLocaleDateString()}  |  Rate: ₹{item.payoutAmount}
-                                </Text>
-                            </Card.Content>
-                        </Card>
+                            <Card
+                                style={[styles.eventCard, { backgroundColor: theme.colors.surface }]}
+                                elevation={1}
+                            >
+                                <Card.Content>
+                                    <Text variant="titleMedium" style={[styles.eventTitle, { color: theme.colors.onSurface, fontWeight: 'bold' }]}>{item.eventTitle}</Text>
+                                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
+                                        📅 {item.eventDate.toDate().toLocaleDateString()}  |  Rate: ₹{item.payoutAmount}
+                                    </Text>
+                                </Card.Content>
+                            </Card>
+                        </PressableScale>
                     ))
                 )}
 
                 {/* Profile Form */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>My Profile & Payout Details</Text>
-                <Card style={styles.profileCard}>
-                    <Card.Content>
+                <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>My Profile & Payout Details</Text>
+                
+                <Card style={[styles.profileCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                    <Card.Content style={{ gap: 6 }}>
                         <TextInput
                             label="Full Name *"
                             value={name}
                             onChangeText={setName}
-                            mode="outlined"
-                            style={styles.input}
+                            mode="flat"
+                            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
                         <TextInput
                             label="Phone Number *"
                             value={phone}
                             onChangeText={setPhone}
                             keyboardType="phone-pad"
-                            mode="outlined"
-                            style={styles.input}
+                            mode="flat"
+                            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
                         <TextInput
                             label="Address"
                             value={address}
                             onChangeText={setAddress}
-                            mode="outlined"
+                            mode="flat"
                             multiline
                             numberOfLines={2}
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
                         <TextInput
                             label="Emergency Contact Number"
                             value={emergencyContact}
                             onChangeText={setEmergencyContact}
                             keyboardType="phone-pad"
-                            mode="outlined"
-                            style={styles.input}
+                            mode="flat"
+                            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
 
-                        <Divider style={styles.divider} />
-                        <Text variant="titleSmall" style={styles.formSubTitle}>Bank Payout details</Text>
+                        <Divider style={[styles.divider, { backgroundColor: theme.colors.outline }]} />
+                        <Text variant="titleMedium" style={[styles.formSubTitle, { color: theme.colors.primary }]}>Bank Payout Details</Text>
 
                         <TextInput
                             label="Bank Account Holder Name *"
                             value={accountHolderName}
                             onChangeText={setAccountHolderName}
-                            mode="outlined"
-                            style={styles.input}
+                            mode="flat"
+                            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
                         <TextInput
                             label="Bank Account Number *"
                             value={bankAccount}
                             onChangeText={setBankAccount}
                             keyboardType="numeric"
-                            mode="outlined"
-                            style={styles.input}
+                            mode="flat"
+                            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
                         <TextInput
                             label="IFSC Code *"
                             value={ifscCode}
                             onChangeText={setIfscCode}
                             autoCapitalize="characters"
-                            mode="outlined"
-                            style={styles.input}
+                            mode="flat"
+                            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
                         />
                         <TextInput
                             label="GPay UPI ID *"
@@ -353,60 +369,69 @@ const WorkerDashboard = ({ navigation }: any) => {
                             value={upiId}
                             onChangeText={setUpiId}
                             autoCapitalize="none"
-                            mode="outlined"
-                            style={styles.input}
+                            mode="flat"
+                            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+                            activeUnderlineColor={theme.colors.primary}
+                            placeholderTextColor={theme.colors.onSurfaceVariant}
                         />
 
-                        <Divider style={styles.divider} />
-                        <Text variant="titleSmall" style={styles.formSubTitle}>GPay QR Code (PNG / JPEG) *</Text>
+                        <Divider style={[styles.divider, { backgroundColor: theme.colors.outline }]} />
+                        <Text variant="titleMedium" style={[styles.formSubTitle, { color: theme.colors.primary, marginBottom: 8 }]}>UPI QR Code (PNG / JPEG) *</Text>
                         
                         {dbUser?.workerDetails?.qrCodeUrl ? (
                             <View style={styles.qrContainer}>
                                 <Image
                                     source={{ uri: dbUser.workerDetails.qrCodeUrl }}
-                                    style={styles.qrImage}
+                                    style={[styles.qrImage, { borderColor: theme.colors.outline }]}
                                     resizeMode="contain"
                                 />
-                                <Button
-                                    mode="outlined"
-                                    onPress={handleUploadQrCode}
-                                    style={styles.uploadBtn}
-                                    icon="file-image-plus-outline"
-                                    disabled={qrUploading}
-                                >
-                                    Replace QR Code Image
-                                </Button>
+                                <PressableScale style={{ width: '100%' }}>
+                                    <Button
+                                        mode="outlined"
+                                        onPress={handleUploadQrCode}
+                                        style={[styles.uploadBtn, { borderColor: theme.colors.outline }]}
+                                        icon="file-image-plus-outline"
+                                        disabled={qrUploading}
+                                        textColor={theme.colors.primary}
+                                    >
+                                        Replace QR Code Image
+                                    </Button>
+                                </PressableScale>
                             </View>
                         ) : (
                             <View style={styles.noQrContainer}>
-                                <Text style={styles.noQrText}>No UPI QR code uploaded yet.</Text>
-                                <Button
-                                    mode="contained"
-                                    buttonColor="#388e3c"
-                                    textColor="#fff"
-                                    onPress={handleUploadQrCode}
-                                    loading={qrUploading}
-                                    disabled={qrUploading}
-                                    style={styles.uploadBtn}
-                                    icon="file-image-plus"
-                                >
-                                    Upload QR Code Image
-                                </Button>
+                                <Text style={[styles.noQrText, { color: theme.colors.onSurfaceVariant }]}>No UPI QR code uploaded yet.</Text>
+                                <PressableScale style={{ width: '100%' }}>
+                                    <Button
+                                        mode="contained"
+                                        onPress={handleUploadQrCode}
+                                        loading={qrUploading}
+                                        disabled={qrUploading}
+                                        style={styles.uploadBtn}
+                                        icon="file-image-plus"
+                                        buttonColor={theme.colors.primary}
+                                        textColor={theme.colors.onPrimary}
+                                    >
+                                        Upload QR Code Image
+                                    </Button>
+                                </PressableScale>
                             </View>
                         )}
 
-                        <Button
-                            mode="contained"
-                            buttonColor="#388e3c"
-                            textColor="#fff"
-                            onPress={handleSaveProfile}
-                            loading={profileLoading}
-                            disabled={profileLoading}
-                            style={styles.saveBtn}
-                            icon="account-check-outline"
-                        >
-                            Save Profile & Payment Info
-                        </Button>
+                        <PressableScale style={{ width: '100%', marginTop: 8 }}>
+                            <Button
+                                mode="contained"
+                                onPress={handleSaveProfile}
+                                loading={profileLoading}
+                                disabled={profileLoading}
+                                style={styles.saveBtn}
+                                icon="account-check-outline"
+                                buttonColor={theme.colors.primary}
+                                textColor={theme.colors.onPrimary}
+                            >
+                                Save Profile & Payout Details
+                            </Button>
+                        </PressableScale>
                     </Card.Content>
                 </Card>
             </View>
@@ -417,70 +442,70 @@ const WorkerDashboard = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    loadingText: {
-        marginTop: 12,
-        color: '#666',
-    },
     header: {
-        padding: 16,
-        backgroundColor: '#388e3c',
-        elevation: 4,
+        padding: 24,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
     },
     headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    avatar: {
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     userInfo: {
         marginLeft: 16,
         flex: 1,
     },
     userName: {
-        color: '#fff',
         fontWeight: 'bold',
     },
     userRole: {
-        color: '#c8e6c9',
         fontWeight: 'bold',
+        fontSize: 11,
         letterSpacing: 1,
     },
     logoutBtn: {
-        borderColor: '#fff',
+        borderRadius: 8,
     },
     content: {
-        padding: 16,
+        padding: 24,
     },
     sectionTitle: {
-        fontWeight: 'bold',
+        fontWeight: '700',
         marginVertical: 12,
-        color: '#333',
     },
     statsRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        gap: 6,
         marginBottom: 8,
+    },
+    statPressable: {
+        flex: 1,
     },
     statCard: {
         flex: 1,
-        marginHorizontal: 3,
-        borderRadius: 8,
-        elevation: 2,
+        borderRadius: 12,
+        overflow: 'hidden',
     },
     statContent: {
         alignItems: 'center',
-        paddingVertical: 10,
+        paddingVertical: 14,
+        paddingHorizontal: 8,
+        position: 'relative',
+    },
+    accentLine: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 3,
     },
     statLabel: {
-        color: '#666',
         fontSize: 10,
         textAlign: 'center',
         marginTop: 4,
@@ -488,76 +513,63 @@ const styles = StyleSheet.create({
     emptyCard: {
         padding: 16,
         alignItems: 'center',
-        backgroundColor: '#fff',
-        elevation: 1,
-        borderRadius: 8,
+        borderRadius: 12,
     },
     emptyText: {
-        color: '#777',
         textAlign: 'center',
         fontSize: 13,
         lineHeight: 18,
     },
     eventCard: {
-        marginBottom: 8,
-        borderRadius: 8,
-        backgroundColor: '#fff',
-        elevation: 2,
+        marginBottom: 12,
+        borderRadius: 12,
     },
     eventTitle: {
         fontWeight: 'bold',
     },
-    eventMeta: {
-        color: '#666',
-        marginTop: 2,
-    },
     profileCard: {
-        borderRadius: 8,
-        backgroundColor: '#fff',
-        elevation: 2,
+        borderRadius: 12,
         marginBottom: 24,
     },
     input: {
-        marginBottom: 12,
+        marginBottom: 8,
+        borderTopLeftRadius: 8,
+        borderTopRightRadius: 8,
     },
     divider: {
-        marginVertical: 16,
+        marginVertical: 14,
     },
     formSubTitle: {
-        fontWeight: 'bold',
-        color: '#388e3c',
-        marginBottom: 12,
+        fontWeight: '700',
     },
     qrContainer: {
         alignItems: 'center',
         marginVertical: 8,
+        gap: 8,
     },
     qrImage: {
-        width: 180,
-        height: 180,
-        backgroundColor: '#f5f5f5',
+        width: 160,
+        height: 160,
         borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        marginBottom: 10,
+        borderWidth: 1.5,
+        marginBottom: 6,
     },
     noQrContainer: {
         alignItems: 'center',
         paddingVertical: 12,
+        gap: 10,
     },
     noQrText: {
-        color: '#888',
-        marginBottom: 10,
+        fontSize: 13,
     },
     uploadBtn: {
         width: '100%',
-        marginBottom: 16,
         borderRadius: 8,
     },
     saveBtn: {
-        marginTop: 8,
-        paddingVertical: 4,
+        width: '100%',
         borderRadius: 8,
+        paddingVertical: 6,
     },
 });
 

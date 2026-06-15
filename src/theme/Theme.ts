@@ -1,31 +1,33 @@
-import { MD3LightTheme } from 'react-native-paper';
+import { MD3DarkTheme } from 'react-native-paper';
 
-// Derive colors from the IZZA Logo (Primary: Purple/Indigo, Secondary: Vibrant Purple, Accent: Gold/Amber)
 export const theme = {
-    ...MD3LightTheme,
+    ...MD3DarkTheme,
     colors: {
-        ...MD3LightTheme.colors,
-        primary: '#6200ee', // Deep Purple (Brand Primary)
-        primaryContainer: '#eaddff',
-        secondary: '#03dac6', // Teal (Brand Accent)
-        secondaryContainer: '#3700b3',
-        tertiary: '#ffb74d', // Amber/Gold (Highlight)
-        surface: '#ffffff',
-        background: '#f8f9fa',
-        error: '#b00020',
-        onPrimary: '#ffffff',
+        ...MD3DarkTheme.colors,
+        primary: '#bb86fc', // Vibrant purple accent
+        primaryContainer: '#3700b3',
+        secondary: '#03dac6', // Teal brand accent
+        secondaryContainer: '#018786',
+        tertiary: '#cf6679',
+        surface: '#121216', // Sleek dark surface card background
+        surfaceVariant: '#1e1e24', // Card hover / list item surface
+        background: '#09090c', // Pure dark background
+        error: '#cf6679',
+        onPrimary: '#000000',
         onSecondary: '#000000',
-        onSurface: '#1c1b1f',
+        onSurface: '#f3f4f6', // Bright text
+        onSurfaceVariant: '#9ca3af', // Muted text
+        outline: '#272732', // Borders
         elevation: {
             level0: 'transparent',
-            level1: '#f7f2fb',
-            level2: '#f3edf7',
-            level3: '#eee8f4',
-            level4: '#ebe5f1',
-            level5: '#e8e2ef',
+            level1: '#121216',
+            level2: '#181820',
+            level3: '#1e1e26',
+            level4: '#24242e',
+            level5: '#2c2c36',
         },
     },
-    roundness: 12, // More rounded, premium feel
+    roundness: 16, // Extra rounded, highly modern feel
 };
 
 export default theme;
