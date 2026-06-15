@@ -8,9 +8,9 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
-import { TextInput, Button, Text, SegmentedButtons, useTheme } from 'react-native-paper';
+import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { useToast } from '../../components/Toast';
-import { RegisterFormData, UserRole } from '../../types';
+import { RegisterFormData } from '../../types';
 import { sendOtpEmail } from '../../services/otpService';
 import PressableScale from '../../components/PressableScale';
 
@@ -23,7 +23,7 @@ const RegisterScreen = ({ navigation }: any) => {
         confirmPassword: '',
         name: '',
         phone: '',
-        role: 'user',
+        role: 'worker',
     });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -80,30 +80,11 @@ const RegisterScreen = ({ navigation }: any) => {
                         Create Account
                     </Text>
                     <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                        Join the IZZA Catering platform
+                        Register as Catering Staff
                     </Text>
                 </View>
 
                 <View style={styles.form}>
-                    <Text variant="labelLarge" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-                        I want to join as:
-                    </Text>
-                    <SegmentedButtons
-                        value={formData.role}
-                        onValueChange={(value) => setFormData({ ...formData, role: value as UserRole })}
-                        buttons={[
-                            { value: 'user', label: 'Customer' },
-                            { value: 'worker', label: 'Catering Staff' },
-                        ]}
-                        style={styles.roleSelector}
-                        theme={{
-                            colors: {
-                                secondaryContainer: theme.colors.primaryContainer,
-                                onSecondaryContainer: theme.colors.primary,
-                            }
-                        }}
-                    />
-
                     <TextInput
                         label="Full Name"
                         value={formData.name}

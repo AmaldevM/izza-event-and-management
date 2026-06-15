@@ -80,7 +80,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 try {
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
                     if (userDoc.exists()) {
-                        setUser({ id: firebaseUser.uid, ...userDoc.data() } as User);
+                        const userData = userDoc.data();
+                        if (userData.role === 'user') {
+                            await signOut(auth);
+                            setUser(null);
+                        } else {
+                            setUser({ id: firebaseUser.uid, ...userData } as User);
+                        }
                     }
                 } catch (err) {
                     console.error('Error fetching user data:', err);
@@ -121,7 +127,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Fetch user data
             const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
             if (userDoc.exists()) {
-                setUser({ id: userCredential.user.uid, ...userDoc.data() } as User);
+                const userData = userDoc.data();
+                if (userData.role === 'user') {
+                    await signOut(auth);
+                    throw new Error('Access denied. This version of the app is only for Administrators and Catering Staff.');
+                }
+                setUser({ id: userCredential.user.uid, ...userData } as User);
             }
 
             setLoading(false);
