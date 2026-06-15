@@ -11,6 +11,12 @@ const firebaseErrorMessages: Record<string, string> = {
     'auth/invalid-credential': 'Invalid email or password. Please check and try again.',
     'auth/operation-not-allowed': 'This sign-in method is not enabled. Please contact support.',
     'auth/user-disabled': 'This account has been disabled. Please contact support.',
+    'auth/invalid-phone-number': 'Please enter a valid phone number.',
+    'auth/missing-phone-number': 'Phone number is required.',
+    'auth/quota-exceeded': 'SMS quota exceeded. Please try again later.',
+    'auth/captcha-check-failed': 'Security check failed. Please try again.',
+    'auth/invalid-verification-code': 'Invalid verification code. Please check and try again.',
+    'auth/code-expired': 'Verification code has expired. Please request a new one.',
 };
 
 /**

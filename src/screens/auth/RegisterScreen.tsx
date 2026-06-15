@@ -9,12 +9,11 @@ import {
     Platform,
 } from 'react-native';
 import { TextInput, Button, Text, SegmentedButtons } from 'react-native-paper';
-import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
 import { RegisterFormData, UserRole } from '../../types';
+import { sendOtpEmail } from '../../services/otpService';
 
 const RegisterScreen = ({ navigation }: any) => {
-    const { register } = useAuth();
     const { showError, showSuccess, showWarning } = useToast();
     const [formData, setFormData] = useState<RegisterFormData>({
         email: '',
@@ -55,8 +54,12 @@ const RegisterScreen = ({ navigation }: any) => {
 
         try {
             setLoading(true);
-            await register(formData);
-            showSuccess('Account created successfully! 🎉');
+            await sendOtpEmail(formData.email);
+            showSuccess('Verification code sent to your email! 📧');
+            navigation.navigate('OtpVerification', {
+                email: formData.email,
+                formData: formData,
+            });
         } catch (err: any) {
             showError(err.message || 'Registration failed. Please try again.');
         } finally {

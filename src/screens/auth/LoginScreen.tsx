@@ -18,20 +18,23 @@ const LoginScreen = ({ navigation }: any) => {
     const { login } = useAuth();
     const { showError, showSuccess } = useToast();
     const [formData, setFormData] = useState<LoginFormData>({
-        email: '',
+        emailOrPhone: '',
         password: '',
     });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async () => {
-        if (!formData.email || !formData.password) {
+        if (!formData.emailOrPhone || !formData.password) {
             showError('Please fill in all fields');
             return;
         }
 
-        if (!formData.email.includes('@')) {
-            showError('Please enter a valid email address');
+        const isEmail = formData.emailOrPhone.includes('@');
+        const isPhone = /^\+?[0-9]{10,15}$/.test(formData.emailOrPhone.replace(/[\s-()]/g, ''));
+
+        if (!isEmail && !isPhone) {
+            showError('Please enter a valid email address or phone number');
             return;
         }
 
@@ -68,14 +71,14 @@ const LoginScreen = ({ navigation }: any) => {
 
                 <View style={styles.form}>
                     <TextInput
-                        label="Email"
-                        value={formData.email}
-                        onChangeText={(text) => setFormData({ ...formData, email: text })}
+                        label="Email or Phone Number"
+                        value={formData.emailOrPhone}
+                        onChangeText={(text) => setFormData({ ...formData, emailOrPhone: text })}
                         mode="outlined"
                         keyboardType="email-address"
                         autoCapitalize="none"
                         style={styles.input}
-                        left={<TextInput.Icon icon="email" />}
+                        left={<TextInput.Icon icon="account" />}
                     />
 
                     <TextInput

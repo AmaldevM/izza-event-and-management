@@ -22,6 +22,7 @@ export interface User {
     email: string;
     name: string;
     phone: string;
+    emailVerified?: boolean;
     role: UserRole;
     workerDetails?: WorkerDetails;
     createdAt: Timestamp;
@@ -117,7 +118,7 @@ export interface AuthState {
 
 // Form Data Interfaces
 export interface LoginFormData {
-    email: string;
+    emailOrPhone: string;
     password: string;
 }
 
@@ -129,6 +130,11 @@ export interface RegisterFormData {
     phone: string;
     role: UserRole;
     workerDetails?: WorkerDetails;
+}
+
+export interface OtpVerificationParams {
+    email: string;
+    formData: RegisterFormData;
 }
 
 export interface EventFormData {
@@ -155,6 +161,7 @@ export interface WorkerFormData {
 export type RootStackParamList = {
     Login: undefined;
     Register: undefined;
+    OtpVerification: OtpVerificationParams;
     UserApp: undefined;
     AdminApp: undefined;
     WorkerApp: undefined;

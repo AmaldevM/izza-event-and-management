@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import OtpVerificationScreen from '../screens/auth/OtpVerificationScreen';
 
 // User Screens
 import UserDashboard from '../screens/user/UserDashboard';
@@ -150,6 +151,7 @@ const AppNavigator = () => {
                 <>
                     <Stack.Screen name="Login" component={LoginScreen} />
                     <Stack.Screen name="Register" component={RegisterScreen} />
+                    <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
                 </>
             ) : (
                 // Authenticated Stack - Role-based routing

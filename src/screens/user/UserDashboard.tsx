@@ -10,7 +10,7 @@ import { Event } from '../../types';
 
 const UserDashboard = ({ navigation }: any) => {
     const { user, logout } = useAuth();
-    const { showError, showInfo } = useToast();
+    const { showError } = useToast();
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);

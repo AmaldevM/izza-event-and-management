@@ -8,7 +8,7 @@ import {
     onAuthStateChanged,
     UserCredential
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../firebase.config';
 import { User, LoginFormData, RegisterFormData, AuthState } from '../types';
 import { getFirebaseErrorMessage } from '../utils/errorMessages';
@@ -32,6 +32,40 @@ export const useAuth = () => {
 interface AuthProviderProps {
     children: ReactNode;
 }
+
+// Helper: detect if input is a phone number
+const isPhoneNumber = (input: string): boolean => {
+    const cleaned = input.trim().replace(/[\s\-\(\)]/g, '');
+    return /^\+?\d{10,15}$/.test(cleaned);
+};
+
+// Helper: look up email by phone number in Firestore
+const getEmailByPhone = async (phone: string): Promise<string | null> => {
+    try {
+        const usersRef = collection(db, 'users');
+        // Try with and without +91 prefix
+        const phoneVariants = [phone];
+        if (!phone.startsWith('+')) {
+            phoneVariants.push('+91' + phone);
+        }
+        if (phone.startsWith('+91')) {
+            phoneVariants.push(phone.substring(3));
+        }
+
+        for (const variant of phoneVariants) {
+            const q = query(usersRef, where('phone', '==', variant));
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                const userData = snapshot.docs[0].data();
+                return userData.email || null;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error looking up email by phone:', error);
+        return null;
+    }
+};
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
@@ -61,11 +95,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return unsubscribe;
     }, []);
 
-    // Login function
-    const login = async ({ email, password }: LoginFormData) => {
+    // Login function - supports email or phone number
+    const login = async ({ emailOrPhone, password }: LoginFormData) => {
         try {
             setError(null);
             setLoading(true);
+
+            let email = emailOrPhone;
+
+            // If input looks like a phone number, look up the associated email
+            if (isPhoneNumber(emailOrPhone)) {
+                const foundEmail = await getEmailByPhone(emailOrPhone);
+                if (!foundEmail) {
+                    throw { code: 'auth/user-not-found', message: 'No account found with this phone number.' };
+                }
+                email = foundEmail;
+            }
 
             const userCredential: UserCredential = await signInWithEmailAndPassword(
                 auth,
@@ -82,7 +127,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setLoading(false);
         } catch (err: any) {
             setLoading(false);
-            const errorMessage = getFirebaseErrorMessage(err.code);
+            const errorMessage = err.code
+                ? getFirebaseErrorMessage(err.code)
+                : err.message || 'Login failed. Please try again.';
             setError(errorMessage);
             throw new Error(errorMessage);
         }
@@ -111,6 +158,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 email: data.email,
                 name: data.name,
                 phone: data.phone,
+                emailVerified: true, // Verified via OTP
                 role: data.role,
                 createdAt: new Date() as any,
                 ...(data.role === 'worker' && data.workerDetails

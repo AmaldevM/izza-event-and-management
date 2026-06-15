@@ -15,7 +15,6 @@ import {
     Text,
     View,
     TouchableOpacity,
-    Platform,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
