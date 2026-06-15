@@ -11,6 +11,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase.config';
 import { User, LoginFormData, RegisterFormData, AuthState } from '../types';
+import { getFirebaseErrorMessage } from '../utils/errorMessages';
 
 interface AuthContextType extends AuthState {
     login: (data: LoginFormData) => Promise<void>;
@@ -81,9 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setLoading(false);
         } catch (err: any) {
             setLoading(false);
-            const errorMessage = err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
-                ? 'Invalid email or password'
-                : 'Login failed. Please try again.';
+            const errorMessage = getFirebaseErrorMessage(err.code);
             setError(errorMessage);
             throw new Error(errorMessage);
         }
@@ -126,9 +125,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setLoading(false);
         } catch (err: any) {
             setLoading(false);
-            const errorMessage = err.code === 'auth/email-already-in-use'
-                ? 'Email already registered'
-                : err.message || 'Registration failed. Please try again.';
+            const errorMessage = err.code
+                ? getFirebaseErrorMessage(err.code)
+                : err.message || 'Something went wrong. Please try again later.';
             setError(errorMessage);
             throw new Error(errorMessage);
         }

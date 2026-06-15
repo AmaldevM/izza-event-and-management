@@ -8,12 +8,14 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
-import { TextInput, Button, Text, Snackbar, SegmentedButtons } from 'react-native-paper';
+import { TextInput, Button, Text, SegmentedButtons } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../components/Toast';
 import { RegisterFormData, UserRole } from '../../types';
 
 const RegisterScreen = ({ navigation }: any) => {
     const { register } = useAuth();
+    const { showError, showSuccess, showWarning } = useToast();
     const [formData, setFormData] = useState<RegisterFormData>({
         email: '',
         password: '',
@@ -23,31 +25,40 @@ const RegisterScreen = ({ navigation }: any) => {
         role: 'user',
     });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
     const handleRegister = async () => {
         if (!formData.email || !formData.password || !formData.name || !formData.phone) {
-            setError('Please fill in all fields');
+            showWarning('Please fill in all required fields');
+            return;
+        }
+
+        if (!formData.email.includes('@')) {
+            showError('Please enter a valid email address');
             return;
         }
 
         if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
+            showError('Passwords do not match. Please check and try again.');
             return;
         }
 
         if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters');
+            showWarning('Password must be at least 6 characters long');
+            return;
+        }
+
+        if (formData.phone.length < 10) {
+            showWarning('Please enter a valid phone number');
             return;
         }
 
         try {
             setLoading(true);
-            setError('');
             await register(formData);
+            showSuccess('Account created successfully! 🎉');
         } catch (err: any) {
-            setError(err.message || 'Registration failed');
+            showError(err.message || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -157,18 +168,6 @@ const RegisterScreen = ({ navigation }: any) => {
                     </Button>
                 </View>
             </ScrollView>
-
-            <Snackbar
-                visible={!!error}
-                onDismiss={() => setError('')}
-                duration={3000}
-                action={{
-                    label: 'Close',
-                    onPress: () => setError(''),
-                }}
-            >
-                {error}
-            </Snackbar>
         </KeyboardAvoidingView>
     );
 };

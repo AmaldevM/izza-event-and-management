@@ -2,14 +2,16 @@
 
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Platform } from 'react-native';
-import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
+import { TextInput, Button, Text } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../components/Toast';
 import { createEvent } from '../../services/eventService';
 import { EventFormData } from '../../types';
 
 const EventRequestScreen = ({ navigation }: any) => {
     const { user } = useAuth();
+    const { showSuccess, showError, showWarning } = useToast();
     const [formData, setFormData] = useState<EventFormData>({
         title: '',
         description: '',
@@ -21,11 +23,20 @@ const EventRequestScreen = ({ navigation }: any) => {
     });
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
 
     const handleSubmit = async () => {
         if (!formData.title || !formData.location || !formData.description || !formData.guestCount) {
-            setMessage('Please fill in all required fields (*)');
+            showWarning('Please fill in all required fields (*)');
+            return;
+        }
+
+        if (formData.guestCount < 1) {
+            showWarning('Guest count must be at least 1');
+            return;
+        }
+
+        if (formData.eventDate <= new Date()) {
+            showWarning('Event date must be in the future');
             return;
         }
 
@@ -34,12 +45,12 @@ const EventRequestScreen = ({ navigation }: any) => {
         try {
             setLoading(true);
             await createEvent(user.id, user.name, formData);
-            setMessage('Event request submitted successfully!');
+            showSuccess('Event request submitted successfully! 🎉');
             setTimeout(() => {
                 navigation.navigate('My Events');
             }, 1500);
         } catch (error: any) {
-            setMessage(error.message || 'Failed to submit event');
+            showError(error.message || 'Failed to submit event. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -140,14 +151,6 @@ const EventRequestScreen = ({ navigation }: any) => {
                     Submit Request
                 </Button>
             </View>
-
-            <Snackbar
-                visible={!!message}
-                onDismiss={() => setMessage('')}
-                duration={3000}
-            >
-                {message}
-            </Snackbar>
         </ScrollView>
     );
 };

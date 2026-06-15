@@ -9,32 +9,38 @@ import {
     Platform,
     Image,
 } from 'react-native';
-import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
+import { TextInput, Button, Text } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../components/Toast';
 import { LoginFormData } from '../../types';
 
 const LoginScreen = ({ navigation }: any) => {
     const { login } = useAuth();
+    const { showError, showSuccess } = useToast();
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
         password: '',
     });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async () => {
         if (!formData.email || !formData.password) {
-            setError('Please fill in all fields');
+            showError('Please fill in all fields');
+            return;
+        }
+
+        if (!formData.email.includes('@')) {
+            showError('Please enter a valid email address');
             return;
         }
 
         try {
             setLoading(true);
-            setError('');
             await login(formData);
+            showSuccess('Welcome back! 👋');
         } catch (err: any) {
-            setError(err.message || 'Login failed');
+            showError(err.message || 'Login failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -107,18 +113,6 @@ const LoginScreen = ({ navigation }: any) => {
                     </Button>
                 </View>
             </ScrollView>
-
-            <Snackbar
-                visible={!!error}
-                onDismiss={() => setError('')}
-                duration={3000}
-                action={{
-                    label: 'Close',
-                    onPress: () => setError(''),
-                }}
-            >
-                {error}
-            </Snackbar>
         </KeyboardAvoidingView>
     );
 };
@@ -166,3 +160,4 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+

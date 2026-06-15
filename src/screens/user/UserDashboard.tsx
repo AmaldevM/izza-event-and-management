@@ -5,10 +5,12 @@ import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Card, Text, Button, Avatar, Surface, ActivityIndicator } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { getEventsByUserId } from '../../services/eventService';
+import { useToast } from '../../components/Toast';
 import { Event } from '../../types';
 
 const UserDashboard = ({ navigation }: any) => {
     const { user, logout } = useAuth();
+    const { showError, showInfo } = useToast();
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -20,6 +22,7 @@ const UserDashboard = ({ navigation }: any) => {
             setEvents(userEvents);
         } catch (error) {
             console.error('Error fetching events:', error);
+            showError('Failed to load events. Pull down to retry.');
         } finally {
             setLoading(false);
             setRefreshing(false);
