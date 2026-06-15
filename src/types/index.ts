@@ -123,18 +123,12 @@ export interface LoginFormData {
 }
 
 export interface RegisterFormData {
-    email: string;
+    emailOrPhone: string;
     password: string;
     confirmPassword: string;
     name: string;
-    phone: string;
     role: UserRole;
     workerDetails?: WorkerDetails;
-}
-
-export interface OtpVerificationParams {
-    email: string;
-    formData: RegisterFormData;
 }
 
 export interface EventFormData {
@@ -161,8 +155,6 @@ export interface WorkerFormData {
 export type RootStackParamList = {
     Login: undefined;
     Register: undefined;
-    OtpVerification: OtpVerificationParams;
-    UserApp: undefined;
     AdminApp: undefined;
     WorkerApp: undefined;
 };

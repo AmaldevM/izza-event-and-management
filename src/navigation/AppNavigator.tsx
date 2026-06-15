@@ -11,7 +11,6 @@ import { useTheme } from 'react-native-paper';
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
-import OtpVerificationScreen from '../screens/auth/OtpVerificationScreen';
 
 // Admin Screens
 import AdminDashboard from '../screens/admin/AdminDashboard';
@@ -172,7 +171,6 @@ const AppNavigator = () => {
                 <>
                     <Stack.Screen name="Login" component={LoginScreen} />
                     <Stack.Screen name="Register" component={RegisterScreen} />
-                    <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
                 </>
             ) : (
                 // Authenticated Stack - Role-based routing

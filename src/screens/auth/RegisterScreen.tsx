@@ -1,4 +1,4 @@
-// Register Screen - Minimalist Dark Mode with tactile micro-interactions
+// Register Screen - Minimalist Dark Mode with tactile micro-interactions (Instant Signup - No OTP)
 
 import React, { useState } from 'react';
 import {
@@ -10,32 +10,35 @@ import {
 } from 'react-native';
 import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { useToast } from '../../components/Toast';
+import { useAuth } from '../../context/AuthContext';
 import { RegisterFormData } from '../../types';
-import { sendOtpEmail } from '../../services/otpService';
 import PressableScale from '../../components/PressableScale';
 
 const RegisterScreen = ({ navigation }: any) => {
     const theme = useTheme();
+    const { register } = useAuth();
     const { showError, showSuccess, showWarning } = useToast();
     const [formData, setFormData] = useState<RegisterFormData>({
-        email: '',
+        emailOrPhone: '',
         password: '',
         confirmPassword: '',
         name: '',
-        phone: '',
         role: 'worker',
     });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleRegister = async () => {
-        if (!formData.email || !formData.password || !formData.name || !formData.phone) {
+        if (!formData.name || !formData.emailOrPhone || !formData.password || !formData.confirmPassword) {
             showWarning('Please fill in all required fields');
             return;
         }
 
-        if (!formData.email.includes('@')) {
-            showError('Please enter a valid email address');
+        const isEmail = formData.emailOrPhone.includes('@');
+        const isPhone = /^\+?[0-9]{10,15}$/.test(formData.emailOrPhone.replace(/[\s-()]/g, ''));
+
+        if (!isEmail && !isPhone) {
+            showError('Please enter a valid email address or phone number');
             return;
         }
 
@@ -49,19 +52,10 @@ const RegisterScreen = ({ navigation }: any) => {
             return;
         }
 
-        if (formData.phone.length < 10) {
-            showWarning('Please enter a valid phone number');
-            return;
-        }
-
         try {
             setLoading(true);
-            await sendOtpEmail(formData.email);
-            showSuccess('Verification code sent to your email! 📧');
-            navigation.navigate('OtpVerification', {
-                email: formData.email,
-                formData: formData,
-            });
+            await register(formData);
+            showSuccess('Account created successfully! 🎉');
         } catch (err: any) {
             showError(err.message || 'Registration failed. Please try again.');
         } finally {
@@ -96,25 +90,14 @@ const RegisterScreen = ({ navigation }: any) => {
                     />
 
                     <TextInput
-                        label="Email Address"
-                        value={formData.email}
-                        onChangeText={(text) => setFormData({ ...formData, email: text })}
+                        label="Email or Phone Number"
+                        value={formData.emailOrPhone}
+                        onChangeText={(text) => setFormData({ ...formData, emailOrPhone: text })}
                         mode="flat"
                         keyboardType="email-address"
                         autoCapitalize="none"
                         style={[styles.input, { backgroundColor: theme.colors.surface }]}
                         left={<TextInput.Icon icon="email-outline" />}
-                        activeUnderlineColor={theme.colors.primary}
-                    />
-
-                    <TextInput
-                        label="Phone Number"
-                        value={formData.phone}
-                        onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                        mode="flat"
-                        keyboardType="phone-pad"
-                        style={[styles.input, { backgroundColor: theme.colors.surface }]}
-                        left={<TextInput.Icon icon="phone-outline" />}
                         activeUnderlineColor={theme.colors.primary}
                     />
 
@@ -157,7 +140,7 @@ const RegisterScreen = ({ navigation }: any) => {
                             buttonColor={theme.colors.primary}
                             textColor={theme.colors.onPrimary}
                         >
-                            Send Verification OTP
+                            Register
                         </Button>
                     </PressableScale>
 
@@ -200,13 +183,6 @@ const styles = StyleSheet.create({
     form: {
         width: '100%',
         gap: 6,
-    },
-    sectionTitle: {
-        marginBottom: 8,
-        fontWeight: '600',
-    },
-    roleSelector: {
-        marginBottom: 20,
     },
     input: {
         marginBottom: 10,

@@ -157,19 +157,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 throw new Error('Passwords do not match');
             }
 
+            let email = data.emailOrPhone;
+            let phone = '';
+
+            if (isPhoneNumber(data.emailOrPhone)) {
+                phone = data.emailOrPhone;
+                // Generate a dummy email format for Firebase Auth (remove any '+' symbols to be safe)
+                const cleanedPhone = phone.trim().replace(/[\s\-\(\)\+]/g, '');
+                email = `${cleanedPhone}@izza.com`;
+
+                // Check if this phone number is already registered in Firestore
+                const existingEmail = await getEmailByPhone(phone);
+                if (existingEmail) {
+                    throw { code: 'auth/email-already-in-use', message: 'This phone number is already registered. Try logging in instead.' };
+                }
+            } else {
+                if (!email.includes('@')) {
+                    throw new Error('Please enter a valid email address.');
+                }
+            }
+
             // Create auth user
             const userCredential: UserCredential = await createUserWithEmailAndPassword(
                 auth,
-                data.email,
+                email,
                 data.password
             );
 
             // Create user document in Firestore
             const newUser: Omit<User, 'id'> = {
-                email: data.email,
+                email: email,
                 name: data.name,
-                phone: data.phone,
-                emailVerified: true, // Verified via OTP
+                phone: phone,
+                emailVerified: true, // Pre-verified
                 role: data.role,
                 createdAt: new Date() as any,
                 ...(data.role === 'worker' && data.workerDetails
