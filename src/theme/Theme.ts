@@ -1,4 +1,4 @@
-import { MD3LightTheme, configureFonts } from 'react-native-paper';
+import { MD3LightTheme } from 'react-native-paper';
 
 // Derive colors from the IZZA Logo (Primary: Purple/Indigo, Secondary: Vibrant Purple, Accent: Gold/Amber)
 export const theme = {

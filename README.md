@@ -1,6 +1,6 @@
 # IZZA Catering & Event Management System 📱
 
-![IZZA Logo](./original-777583a22f5a93d354b63c9413579bff.webp)
+![IZZA Logo](./assets/app-logo.png)
 
 > A comprehensive React Native mobile application for digitalizing event planning and catering services
 

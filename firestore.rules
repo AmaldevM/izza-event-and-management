@@ -52,5 +52,13 @@ service cloud.firestore {
       allow update: if isOwner(resource.data.recipientId);
       allow delete: if isAdmin();
     }
+
+    // Event Assignments collection
+    match /event_assignments/{assignmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isOwner(resource.data.workerId);
+      allow delete: if isAdmin();
+    }
   }
 }

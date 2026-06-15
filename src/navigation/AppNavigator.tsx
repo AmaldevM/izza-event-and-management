@@ -15,6 +15,7 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import UserDashboard from '../screens/user/UserDashboard';
 import EventRequestScreen from '../screens/user/EventRequestScreen';
 import MyEventsScreen from '../screens/user/MyEventsScreen';
+import UserEventDetailsScreen from '../screens/user/EventDetailsScreen';
 
 // Admin Screens
 import AdminDashboard from '../screens/admin/AdminDashboard';
@@ -22,6 +23,8 @@ import EventManagement from '../screens/admin/EventManagement';
 import WorkerManagement from '../screens/admin/WorkerManagement';
 import CalendarView from '../screens/admin/CalendarView';
 import PaymentTracking from '../screens/admin/PaymentTracking';
+import AdminEventDetailsScreen from '../screens/admin/EventDetailsScreen';
+import AssignWorkersScreen from '../screens/admin/AssignWorkers';
 
 // Worker Screens
 import WorkerDashboard from '../screens/worker/WorkerDashboard';
@@ -29,6 +32,7 @@ import AvailableEvents from '../screens/worker/AvailableEvents';
 import MyAssignments from '../screens/worker/MyAssignments';
 import AttendanceScreen from '../screens/worker/AttendanceScreen';
 import EarningsScreen from '../screens/worker/EarningsScreen';
+import WorkerEventDetailsScreen from '../screens/worker/EventDetailsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -100,6 +104,34 @@ const WorkerTabs = () => (
     </Tab.Navigator>
 );
 
+// Role Stack Navigators
+const UserStack = createStackNavigator();
+const UserStackScreen = () => (
+    <UserStack.Navigator>
+        <UserStack.Screen name="UserTabs" component={UserTabs} options={{ headerShown: false }} />
+        <UserStack.Screen name="EventDetails" component={UserEventDetailsScreen} options={{ title: 'Event Details', headerTintColor: '#6200ee' }} />
+    </UserStack.Navigator>
+);
+
+const AdminStack = createStackNavigator();
+const AdminStackScreen = () => (
+    <AdminStack.Navigator>
+        <AdminStack.Screen name="AdminTabs" component={AdminTabs} options={{ headerShown: false }} />
+        <AdminStack.Screen name="EventDetails" component={AdminEventDetailsScreen} options={{ title: 'Event Details', headerTintColor: '#d32f2f' }} />
+        <AdminStack.Screen name="AssignWorkers" component={AssignWorkersScreen} options={{ title: 'Assign Workers', headerTintColor: '#d32f2f' }} />
+        <AdminStack.Screen name="CalendarView" component={CalendarView} options={{ title: 'Operations Calendar', headerTintColor: '#d32f2f' }} />
+    </AdminStack.Navigator>
+);
+
+const WorkerStack = createStackNavigator();
+const WorkerStackScreen = () => (
+    <WorkerStack.Navigator>
+        <WorkerStack.Screen name="WorkerTabs" component={WorkerTabs} options={{ headerShown: false }} />
+        <WorkerStack.Screen name="EventDetails" component={WorkerEventDetailsScreen} options={{ title: 'Event Details', headerTintColor: '#388e3c' }} />
+        <WorkerStack.Screen name="AttendanceHistory" component={AttendanceScreen} options={{ title: 'Attendance Log', headerTintColor: '#388e3c' }} />
+    </WorkerStack.Navigator>
+);
+
 const AppNavigator = () => {
     const { user, loading } = useAuth();
 
@@ -122,9 +154,9 @@ const AppNavigator = () => {
             ) : (
                 // Authenticated Stack - Role-based routing
                 <>
-                    {user.role === 'user' && <Stack.Screen name="UserApp" component={UserTabs} />}
-                    {user.role === 'admin' && <Stack.Screen name="AdminApp" component={AdminTabs} />}
-                    {user.role === 'worker' && <Stack.Screen name="WorkerApp" component={WorkerTabs} />}
+                    {user.role === 'user' && <Stack.Screen name="UserApp" component={UserStackScreen} />}
+                    {user.role === 'admin' && <Stack.Screen name="AdminApp" component={AdminStackScreen} />}
+                    {user.role === 'worker' && <Stack.Screen name="WorkerApp" component={WorkerStackScreen} />}
                 </>
             )}
         </Stack.Navigator>

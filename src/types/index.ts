@@ -4,7 +4,7 @@ import { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'user' | 'admin' | 'worker';
 
-export type EventStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+export type EventStatus = 'pending' | 'approved' | 'assigned' | 'in progress' | 'completed' | 'rejected' | 'cancelled';
 
 export type PaymentStatus = 'pending' | 'paid';
 
@@ -32,6 +32,10 @@ export interface WorkerDetails {
     bankAccount: string;
     ifscCode: string;
     upiId: string;
+    address?: string;
+    emergencyContact?: string;
+    qrCodeUrl?: string;
+    accountHolderName?: string;
 }
 
 // Event Interface
@@ -45,6 +49,9 @@ export interface Event {
     userId: string; // Reference to user who created the event
     userName?: string; // Denormalized for display
     assignedWorkers: string[]; // Array of worker IDs
+    guestCount?: number;
+    cateringRequirements?: string;
+    additionalNotes?: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
@@ -87,6 +94,20 @@ export interface Notification {
     createdAt: Timestamp;
 }
 
+// Event Assignment Interface
+export interface EventAssignment {
+    id: string;
+    eventId: string;
+    eventTitle: string;
+    eventDate: Timestamp;
+    workerId: string;
+    workerName: string;
+    status: 'assigned' | 'accepted' | 'declined';
+    payoutAmount: number;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
 // Auth Context State
 export interface AuthState {
     user: User | null;
@@ -115,46 +136,43 @@ export interface EventFormData {
     description: string;
     eventDate: Date;
     location: string;
+    guestCount: number;
+    cateringRequirements: string;
+    additionalNotes: string;
 }
 
 export interface WorkerFormData {
     bankAccount: string;
     ifscCode: string;
     upiId: string;
+    address: string;
+    emergencyContact: string;
+    qrCodeUrl?: string;
+    accountHolderName: string;
 }
 
 // Navigation Types
 export type RootStackParamList = {
     Login: undefined;
     Register: undefined;
-    UserDashboard: undefined;
-    AdminDashboard: undefined;
-    WorkerDashboard: undefined;
+    UserApp: undefined;
+    AdminApp: undefined;
+    WorkerApp: undefined;
 };
 
 export type UserStackParamList = {
-    Dashboard: undefined;
-    EventRequest: undefined;
-    MyEvents: undefined;
+    UserTabs: undefined;
     EventDetails: { eventId: string };
 };
 
 export type AdminStackParamList = {
-    Dashboard: undefined;
-    EventManagement: undefined;
-    WorkerManagement: undefined;
-    CalendarView: undefined;
-    PaymentTracking: undefined;
+    AdminTabs: undefined;
     EventDetails: { eventId: string };
     AssignWorkers: { eventId: string };
 };
 
 export type WorkerStackParamList = {
-    Dashboard: undefined;
-    AvailableEvents: undefined;
-    MyAssignments: undefined;
-    Attendance: undefined;
-    Earnings: undefined;
+    WorkerTabs: undefined;
     EventDetails: { eventId: string };
-    CheckIn: { eventId: string };
 };
+

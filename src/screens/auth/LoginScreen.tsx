@@ -7,7 +7,6 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     Platform,
-    Alert,
     Image,
 } from 'react-native';
 import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
@@ -49,7 +48,7 @@ const LoginScreen = ({ navigation }: any) => {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
                     <Image
-                        source={require('../../../original-777583a22f5a93d354b63c9413579bff.webp')}
+                        source={require('../../../assets/app-logo.png')}
                         style={styles.logo}
                         resizeMode="contain"
                     />

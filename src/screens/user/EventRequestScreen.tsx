@@ -15,14 +15,17 @@ const EventRequestScreen = ({ navigation }: any) => {
         description: '',
         eventDate: new Date(),
         location: '',
+        guestCount: 0,
+        cateringRequirements: '',
+        additionalNotes: '',
     });
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
 
     const handleSubmit = async () => {
-        if (!formData.title || !formData.location || !formData.description) {
-            setMessage('Please fill in all fields');
+        if (!formData.title || !formData.location || !formData.description || !formData.guestCount) {
+            setMessage('Please fill in all required fields (*)');
             return;
         }
 
@@ -66,12 +69,42 @@ const EventRequestScreen = ({ navigation }: any) => {
                 />
 
                 <TextInput
+                    label="Guest Count *"
+                    value={formData.guestCount ? formData.guestCount.toString() : ''}
+                    onChangeText={(text) => setFormData({ ...formData, guestCount: parseInt(text) || 0 })}
+                    mode="outlined"
+                    keyboardType="numeric"
+                    style={styles.input}
+                />
+
+                <TextInput
+                    label="Catering Requirements"
+                    placeholder="e.g. Vegetarian only, Buffet, Live counters"
+                    value={formData.cateringRequirements}
+                    onChangeText={(text) => setFormData({ ...formData, cateringRequirements: text })}
+                    mode="outlined"
+                    multiline
+                    numberOfLines={3}
+                    style={styles.input}
+                />
+
+                <TextInput
                     label="Description *"
                     value={formData.description}
                     onChangeText={(text) => setFormData({ ...formData, description: text })}
                     mode="outlined"
                     multiline
                     numberOfLines={4}
+                    style={styles.input}
+                />
+
+                <TextInput
+                    label="Additional Notes"
+                    value={formData.additionalNotes}
+                    onChangeText={(text) => setFormData({ ...formData, additionalNotes: text })}
+                    mode="outlined"
+                    multiline
+                    numberOfLines={3}
                     style={styles.input}
                 />
 
@@ -88,7 +121,7 @@ const EventRequestScreen = ({ navigation }: any) => {
                     <DateTimePicker
                         value={formData.eventDate}
                         mode="date"
-                        onChange={(event, selectedDate) => {
+                        onChange={(_event, selectedDate) => {
                             setShowDatePicker(Platform.OS === 'ios');
                             if (selectedDate) {
                                 setFormData({ ...formData, eventDate: selectedDate });

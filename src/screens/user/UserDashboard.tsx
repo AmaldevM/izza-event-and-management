@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card, Text, Button, Avatar, Surface } from 'react-native-paper';
+import { Card, Text, Button, Avatar, Surface, ActivityIndicator } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { getEventsByUserId } from '../../services/eventService';
 import { Event } from '../../types';
@@ -38,6 +38,14 @@ const UserDashboard = ({ navigation }: any) => {
     const pendingEvents = events.filter(e => e.status === 'pending').length;
     const approvedEvents = events.filter(e => e.status === 'approved').length;
     const completedEvents = events.filter(e => e.status === 'completed').length;
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#6200ee" />
+            </View>
+        );
+    }
 
     return (
         <ScrollView
@@ -243,6 +251,12 @@ const styles = StyleSheet.create({
     emptyCard: {
         padding: 20,
         elevation: 2,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
     },
 });
 
